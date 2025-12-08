@@ -7,17 +7,11 @@
   require($link . "php/config.php");
   require_once($link . "php/dashboard/dashboard.php");
 
-  // Check if user is logged in (optional - implement nanti)
-  // if (!isset($_SESSION['user_id'])) {
-  //     header("Location: login.php");
-  //     exit();
-  // }
-
   // Handle approve/reject actions
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $stock_id = $_POST['stock_id'] ?? 0;
       $action = $_POST['action'] ?? '';
-      $accountant_id = $_SESSION['user_id'] ?? 1; // Default ke 1 untuk testing
+      $accountant_id = $_SESSION['user_id'] ?? 1;
       
       if ($action === 'approve') {
           if (approveProduct($conn, $stock_id, $accountant_id)) {
@@ -42,257 +36,379 @@
 ?>
 
 <div class="main">
-  <!-- Header -->
-  <div class="dashboard-header">
-    <div>
-      <h2 class="header-title">Dashboard</h2>
-      <p class="header-subtitle">Welcome back, <?= htmlspecialchars($_SESSION['username'] ?? 'Accountant') ?>!</p>
+  <!-- Professional Header -->
+  <div class="dashboard-header-pro">
+    <div class="header-left">
+      <h2 class="header-title-pro">Dashboard Overview</h2>
+      <p class="header-subtitle-pro">Welcome back, <?= htmlspecialchars($_SESSION['username'] ?? 'Administrator') ?></p>
     </div>
-    <div class="dashboard-date">
-      <span class="date-icon">📅</span>
-      <span><?= date('l, F j, Y') ?></span>
+    <div class="header-right">
+      <div class="date-display">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span><?= date('F j, Y') ?></span>
+      </div>
     </div>
   </div>
 
   <!-- Alert Messages -->
   <?php if (isset($success_msg)): ?>
     <div class="alert alert-success">
-      <span class="alert-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg></span>
+      <svg class="alert-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
       <span><?= htmlspecialchars($success_msg) ?></span>
     </div>
   <?php endif; ?>
 
   <?php if (isset($error_msg)): ?>
     <div class="alert alert-danger">
-      <span class="alert-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M330-120 120-330v-300l210-210h300l210 210v300L630-120H330Zm36-190 114-114 114 114 56-56-114-114 114-114-56-56-114 114-114-114-56 56 114 114-114 114 56 56Zm-2 110h232l164-164v-232L596-760H364L200-596v232l164 164Zm116-280Z"/></svg></span>
+      <svg class="alert-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
       <span><?= htmlspecialchars($error_msg) ?></span>
     </div>
   <?php endif; ?>
 
   <!-- Statistics Cards -->
-  <div class="cards">
-    <div class="card card-budget">
-      <div class="card-icon"></div>
-      <div class="card-content">
-        <div class="card-label">Category Stock</div>
-        <div class="card-value">RM <?= number_format($stats['budget_out'], 2) ?></div>
+  <div class="stats-grid">
+    <div class="stat-card stat-primary">
+      <div class="stat-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Total Inventory Value</div>
+        <div class="stat-value">RM <?= number_format($stats['budget_out'], 2) ?></div>
+        <div class="stat-change positive">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+          <span>12.5% from last month</span>
+        </div>
       </div>
     </div>
-    <div class="card card-balance">
-      <div class="card-icon"></div>
-      <div class="card-content">
-        <div class="card-label">Total Stock</div>
-        <div class="card-value">RM <?= number_format($stats['estimate_balance'], 2) ?></div>
+
+    <div class="stat-card stat-secondary">
+      <div class="stat-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Total Stock Items</div>
+        <div class="stat-value"><?= $stats['approved_products'] ?></div>
+        <div class="stat-info">Across all categories</div>
       </div>
     </div>
-    <div class="card card-pending">
-      <div class="card-icon">⏳</div>
-      <div class="card-content">
-        <div class="card-label">Pending Requests</div>
-        <div class="card-value"><?= $stats['pending_requests'] ?></div>
+
+    <div class="stat-card stat-warning">
+      <div class="stat-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Pending Approvals</div>
+        <div class="stat-value"><?= $stats['pending_requests'] ?></div>
+        <div class="stat-info">Requires your attention</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-info">
+      <div class="stat-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Total Quantity</div>
+        <div class="stat-value"><?= number_format($stats['total_quantity'], 0) ?></div>
+        <div class="stat-info">Pieces in stock</div>
       </div>
     </div>
   </div>
 
-  <!-- Marble Type Summary -->
-  <div class="marble-summary">
-    <h3 class="section-title">Stock by Marble Type</h3>
-    <div class="marble-cards">
+  <!-- Stock by Category Section -->
+  <div class="section-container">
+    <div class="section-header-clean">
+      <div>
+        <h3 class="section-title-clean">Stock by Marble Type</h3>
+        <p class="section-desc">Inventory distribution across categories</p>
+      </div>
+      <button class="btn-link" onclick="window.location.href='product/index.php'">
+        View All
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <div class="category-grid">
       <?php foreach ($marbleTypes as $type): ?>
-        <div class="marble-card">
-          <div class="marble-info">
-            <div class="marble-code"><?= htmlspecialchars($type['code']) ?></div>
-            <div class="marble-name"><?= htmlspecialchars($type['name']) ?></div>
+        <div class="category-card">
+          <div class="category-header">
+            <div class="category-code"><?= htmlspecialchars($type['code']) ?></div>
+            <div class="category-badge"><?= $type['total_count'] ?> items</div>
           </div>
-          <div class="marble-stats">
-            <div class="marble-count"><?= $type['total_count'] ?> items</div>
-            <div class="marble-qty"><?= $type['total_qty'] ?? 0 ?> pcs</div>
+          <div class="category-name"><?= htmlspecialchars($type['name']) ?></div>
+          <div class="category-stats-row">
+            <div class="category-stat">
+              <span class="stat-number"><?= $type['total_qty'] ?? 0 ?></span>
+              <span class="stat-text">pieces</span>
+            </div>
           </div>
         </div>
       <?php endforeach; ?>
     </div>
   </div>
 
-  <!-- Pending Requests Section -->
-  <div class="section-header">
-    <div>
-      <h3 class="section-title">Pending Approvals</h3>
-      <p class="section-subtitle">Review and approve stock requests from Purchasing team</p>
+  <!-- Pending Approvals Section -->
+  <div class="section-container">
+    <div class="section-header-clean">
+      <div>
+        <h3 class="section-title-clean">Pending Approvals</h3>
+        <p class="section-desc">Stock requests awaiting your review</p>
+      </div>
+      <div class="search-box-clean">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input type="text" id="searchRequest" placeholder="Search requests..." />
+      </div>
     </div>
-    <div class="search-box">
-      <input type="text" id="searchRequest" placeholder="Search requests..." />
-      <button class="btn-search">
-        <span>🔍</span>
-      </button>
-    </div>
-  </div>
 
-  <!-- Requests Table -->
-  <div class="table-container">
-    <table id="requestsTable">
-      <thead>
-        <tr>
-          <th>Stock ID</th>
-          <th>Description</th>
-          <th>Marble Type</th>
-          <th>Quantity</th>
-          <th>Total Amount</th>
-          <th>Requested By</th>
-          <th>Date</th>
-          <th class="text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php if ($pendingProducts->num_rows === 0): ?>
+    <div class="table-wrapper">
+      <table class="data-table" id="requestsTable">
+        <thead>
           <tr>
-            <td colspan="8" class="empty-state">
-              <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m644-448-56-58 122-94-230-178-94 72-56-58 150-116 360 280-196 152Zm115 114-58-58 73-56 66 50-81 64Zm33 258L632-236 480-118 120-398l66-50 294 228 94-73-57-56-37 29-360-280 83-65L55-811l57-57 736 736-56 56ZM487-606Z"/></svg></div>
-              <div class="empty-text">No pending requests</div>
-              <div class="empty-subtext">All requests have been processed</div>
-            </td>
+            <th>Stock ID</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Quantity</th>
+            <th>Amount</th>
+            <th>Requested By</th>
+            <th>Date</th>
+            <th class="text-center">Actions</th>
           </tr>
-        <?php else: ?>
-          <?php while ($product = $pendingProducts->fetch_assoc()): ?>
-            <tr class="request-row">
-              <td class="request-id">
-                <strong><?= htmlspecialchars($product['stock_id']) ?></strong>
-              </td>
-              <td class="product-desc"><?= htmlspecialchars($product['description']) ?></td>
-              <td>
-                <span class="badge badge-finish">
-                  <?= htmlspecialchars($product['finish_name']) ?>
-                </span>
-              </td>
-              <td><?= htmlspecialchars($product['quantity']) ?></td>
-              <td>RM <?= number_format($product['total_amount'], 2) ?></td>
-              <td><?= htmlspecialchars($product['requester_name'] ?? 'Unknown') ?></td>
-              <td><?= date('M d, Y', strtotime($product['action_date'])) ?></td>
-              <td class="action-cell">
-                <div class="action-buttons">
-                  <!-- Detail Button -->
-                  <button 
-                    onclick="window.location.href='request-detail.php?id=<?= $product['id'] ?>'"
-                    class="btn-action btn-view"
-                    title="View Details">
-                    <span>👁️</span>
-                  </button>
-                  
-                  <!-- Approve Button -->
-                  <form method="POST" style="display: inline;" onsubmit="return confirm('Approve this product?')">
-                    <input type="hidden" name="stock_id" value="<?= $product['id'] ?>">
-                    <input type="hidden" name="action" value="approve">
-                    <button type="submit" class="btn-action btn-approve" title="Approve">
-                      <span>✅</span>
-                    </button>
-                  </form>
-                  
-                  <!-- Reject Button -->
-                  <button 
-                    onclick="showRejectModal(<?= $product['id'] ?>)"
-                    class="btn-action btn-reject" 
-                    title="Reject">
-                    <span>❌</span>
-                  </button>
+        </thead>
+        <tbody>
+          <?php if ($pendingProducts->num_rows === 0): ?>
+            <tr>
+              <td colspan="8" class="empty-state-row">
+                <div class="empty-state-content">
+                  <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                  <div class="empty-title">All Clear!</div>
+                  <div class="empty-desc">No pending requests at the moment</div>
                 </div>
               </td>
             </tr>
-          <?php endwhile; ?>
-        <?php endif; ?>
-      </tbody>
-    </table>
+          <?php else: ?>
+            <?php while ($product = $pendingProducts->fetch_assoc()): ?>
+              <tr class="data-row">
+                <td>
+                  <div class="cell-id"><?= htmlspecialchars($product['stock_id']) ?></div>
+                </td>
+                <td>
+                  <div class="cell-text"><?= htmlspecialchars($product['description']) ?></div>
+                </td>
+                <td>
+                  <span class="badge-type"><?= htmlspecialchars($product['finish_name']) ?></span>
+                </td>
+                <td>
+                  <div class="cell-number"><?= number_format($product['quantity'], 0) ?></div>
+                </td>
+                <td>
+                  <div class="cell-amount">RM <?= number_format($product['total_amount'], 2) ?></div>
+                </td>
+                <td>
+                  <div class="cell-user">
+                    <div class="user-avatar">
+                      <?= strtoupper(substr($product['requester_name'] ?? 'U', 0, 1)) ?>
+                    </div>
+                    <span><?= htmlspecialchars($product['requester_name'] ?? 'Unknown') ?></span>
+                  </div>
+                </td>
+                <td>
+                  <div class="cell-date"><?= date('M d, Y', strtotime($product['action_date'])) ?></div>
+                </td>
+                <td>
+                  <div class="action-group">
+                    <button 
+                      onclick="window.location.href='request-detail.php?id=<?= $product['id'] ?>'"
+                      class="action-btn action-view"
+                      title="View Details">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                    
+                    <form method="POST" style="display: inline;" onsubmit="return confirm('Approve this request?')">
+                      <input type="hidden" name="stock_id" value="<?= $product['id'] ?>">
+                      <input type="hidden" name="action" value="approve">
+                      <button type="submit" class="action-btn action-approve" title="Approve">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </button>
+                    </form>
+                    
+                    <button 
+                      onclick="showRejectModal(<?= $product['id'] ?>)"
+                      class="action-btn action-reject" 
+                      title="Reject">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <?php endwhile; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Quick Actions -->
-  <div class="quick-actions">
-    <h3 class="section-title">Quick Actions</h3>
-    <div class="action-cards">
-      <div class="action-card" onclick="window.location.href='product/index.php'">
-        <div class="action-card-icon">📦</div>
-        <div class="action-card-title">Manage Products</div>
-        <div class="action-card-desc">View and manage inventory</div>
-      </div>
-      <div class="action-card" onclick="window.location.href='product/add.php'">
-        <div class="action-card-icon">➕</div>
-        <div class="action-card-title">Add Product</div>
-        <div class="action-card-desc">Add new product to inventory</div>
-      </div>
-      <div class="action-card" onclick="window.location.href='user/index.php'">
-        <div class="action-card-icon">👥</div>
-        <div class="action-card-title">Manage Users</div>
-        <div class="action-card-desc">Add or edit user accounts</div>
-      </div>
+  <div class="quick-access">
+    <h3 class="section-title-clean">Quick Access</h3>
+    <div class="quick-grid">
+      <a href="product/index.php" class="quick-card">
+        <div class="quick-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+        </div>
+        <div class="quick-title">Manage Products</div>
+        <div class="quick-desc">View and manage inventory</div>
+      </a>
+
+      <a href="product/index.php" class="quick-card">
+        <div class="quick-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </div>
+        <div class="quick-title">Add Product</div>
+        <div class="quick-desc">Add new stock items</div>
+      </a>
+
+      <a href="user/index.php" class="quick-card">
+        <div class="quick-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="quick-title">Manage Users</div>
+        <div class="quick-desc">User account management</div>
+      </a>
     </div>
   </div>
 </div>
 
-<!-- Reject Modal (Hidden by default) -->
-<div id="rejectModal" class="modal">
-  <div class="modal-content">
-    <h3>Reject Product</h3>
-    <form method="POST" id="rejectForm">
-      <input type="hidden" name="stock_id" id="rejectStockId">
-      <input type="hidden" name="action" value="reject">
-      
-      <label for="reason">Reason for rejection:</label>
-      <textarea name="reason" id="reason" rows="4" class="input-um" required></textarea>
-      
-      <div class="btn-umContainer">
-        <button type="button" class="cancel" onclick="closeRejectModal()">Cancel</button>
-        <button type="submit" class="btn btn-red">Reject</button>
-      </div>
-    </form>
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3>Reject Request</h3>
+      <button class="modal-close" onclick="closeRejectModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form method="POST" id="rejectForm">
+        <input type="hidden" name="stock_id" id="rejectStockId">
+        <input type="hidden" name="action" value="reject">
+        
+        <label for="reason" class="form-label">Reason for rejection:</label>
+        <textarea 
+          name="reason" 
+          id="reason" 
+          rows="4" 
+          class="form-textarea" 
+          placeholder="Please provide a detailed reason for rejection..."
+          required></textarea>
+        
+        <div class="btn-umContainer">
+          <button type="button" class="cancel" onclick="closeRejectModal()">Cancel</button>
+          <button type="submit" class="btn btn-red">Submit Rejection</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
-<!-- JavaScript -->
 <script>
 // Search functionality
 document.getElementById('searchRequest').addEventListener('keyup', function() {
   const searchValue = this.value.toLowerCase();
-  const table = document.getElementById('requestsTable');
-  const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+  const rows = document.querySelectorAll('#requestsTable tbody .data-row');
   
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
+  rows.forEach(row => {
     const text = row.textContent.toLowerCase();
-    
-    if (text.includes(searchValue)) {
-      row.style.display = '';
-    } else {
-      row.style.display = 'none';
-    }
-  }
+    row.style.display = text.includes(searchValue) ? '' : 'none';
+  });
 });
 
 // Reject Modal
 function showRejectModal(stockId) {
   document.getElementById('rejectStockId').value = stockId;
-  document.getElementById('rejectModal').style.display = 'flex';
+  document.getElementById('rejectModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
 }
 
 function closeRejectModal() {
-  document.getElementById('rejectModal').style.display = 'none';
+  document.getElementById('rejectModal').classList.remove('active');
+  document.body.style.overflow = 'auto';
   document.getElementById('rejectForm').reset();
 }
 
-// Close modal when clicking outside
-window.onclick = function(event) {
-  const modal = document.getElementById('rejectModal');
-  if (event.target === modal) {
-    closeRejectModal();
-  }
-}
+// Close modal on outside click
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+  if (e.target === this) closeRejectModal();
+});
 
-// Auto-hide alert after 5 seconds
-setTimeout(function() {
-  const alerts = document.querySelectorAll('.alert');
-  alerts.forEach(alert => {
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeRejectModal();
+});
+
+// Auto-hide alerts
+setTimeout(() => {
+  document.querySelectorAll('.alert').forEach(alert => {
     alert.style.opacity = '0';
     setTimeout(() => alert.remove(), 300);
   });
 }, 5000);
 </script>
 
-<?php 
-  include($link."container/footer.php");
-?>
+<?php include($link."container/footer.php"); ?>

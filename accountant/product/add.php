@@ -1,4 +1,15 @@
 <?php 
+session_start();
+
+// 🔒 AUTH CHECK PALING ATAS
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: ../../login.php");
+    exit();
+}
+if (strtolower($_SESSION['role_name']) !== 'accountant') {
+    header("Location: ../../login.php"); // pastikan path betul
+    exit();
+}
 $nav = "../";
 $link = "../../include/";
 include($link."container/head.php");

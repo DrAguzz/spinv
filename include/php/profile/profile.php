@@ -1,33 +1,53 @@
 <?php
 
 // =======================================
-// GET ACCOUNTANT (untuk paparan profile)
+// GET ACCOUNTANT (paparan profile)
 // =======================================
 function getAccountant($conn) {
     $sql = "
-        SELECT u.*, r.role_name, r.password
+        SELECT 
+            u.user_id,
+            u.username,
+            u.email,
+            u.image,
+            u.status,
+            r.role_id,
+            r.role_name,
+            r.password AS role_password
         FROM user u
         LEFT JOIN role r ON u.role_id = r.role_id
-        WHERE u.role_id = '1'
+        WHERE u.role_id = 1
         LIMIT 1
     ";
+
     $result = $conn->query($sql);
     return $result->fetch_assoc();
 }
 
 // =======================================
-// GET ACCOUNTANT BY ID (untuk edit.php)
+// GET ACCOUNTANT BY ID (edit.php)
 // =======================================
 function getAccountantById($conn, $id) {
     $sql = "
-        SELECT u.*, r.role_name, r.password
+        SELECT 
+            u.user_id,
+            u.username,
+            u.email,
+            u.image,
+            u.status,
+            r.role_id,
+            r.role_name,
+            r.password AS role_password
         FROM user u
         LEFT JOIN role r ON u.role_id = r.role_id
-        WHERE u.user_id = '$id'
+        WHERE u.user_id = ?
         LIMIT 1
     ";
-    $result = $conn->query($sql);
-    return $result->fetch_assoc();
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
 }
 
 // =======================================
@@ -35,51 +55,50 @@ function getAccountantById($conn, $id) {
 // =======================================
 function updateAccountant($conn, $id, $name, $email, $password, $imageName) {
 
-    // Get current data
+    // Ambil data lama
     $old = getAccountantById($conn, $id);
+    if (!$old) return false;
 
     // ---------------------------
-    // HANDLE PASSWORD
+    // HANDLE PASSWORD (ROLE)
     // ---------------------------
-    if (!empty($password)) {
-        // Hash password baru
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    if (!empty(trim($password))) {
 
-        // Update password dalam role (bukan table user)
+        // Hash password BARU (sekali sahaja)
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
         $sqlRole = "
-            UPDATE role
-            SET password = '$hashedPassword'
-            WHERE role_id = '{$old['role']}'
+            UPDATE role 
+            SET password = ?
+            WHERE role_id = ?
         ";
-        $conn->query($sqlRole);
-
-    } else {
-        // Jika password kosong → kekalkan password role lama
-        $hashedPassword = $old['role_password'];
+        $stmtRole = $conn->prepare($sqlRole);
+        $stmtRole->bind_param("si", $hash, $old['role_id']);
+        $stmtRole->execute();
     }
+    // jika password kosong → tak buat apa-apa (kekalkan hash lama)
 
     // ---------------------------
     // HANDLE IMAGE
     // ---------------------------
-    if (!empty($imageName)) {
-        $finalImage = $imageName;
-    } else {
-        $finalImage = $old['image']; // kekalkan
-    }
+    $finalImage = !empty($imageName) ? $imageName : $old['image'];
 
     // ---------------------------
     // UPDATE USER PROFILE
     // ---------------------------
-    $sql = "
+    $sqlUser = "
         UPDATE user 
         SET 
-            username = '$name',
-            email = '$email',
-            image = '$finalImage'
-        WHERE user_id = '$id'
+            username = ?,
+            email = ?,
+            image = ?
+        WHERE user_id = ?
     ";
 
-    return $conn->query($sql);
+    $stmtUser = $conn->prepare($sqlUser);
+    $stmtUser->bind_param("sssi", $name, $email, $finalImage, $id);
+
+    return $stmtUser->execute();
 }
 
 ?>

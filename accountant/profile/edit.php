@@ -1,16 +1,22 @@
 <?php
+session_start();
+
+// 🔒 AUTH CHECK PALING ATAS
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: ../../login.php");
+    exit();
+}
+if (strtolower($_SESSION['role_name']) !== 'accountant') {
+    header("Location: ../../login.php"); // pastikan path betul
+    exit();
+}
+
 $nav = "../";
 $link = "../../include/";
 include($link . "container/head.php");
 include($link . "container/nav.php");
 require($link . "php/config.php");
 require_once($link . "php/profile/profile.php");
-
-// --- Ambil ID user dari URL ---
-if (!isset($_GET['id'])) {
-    echo "<script>alert('User tidak ditemui!'); window.location.href='profile.php';</script>";
-    exit;
-}
 
 $id = $_GET['id'];
 
@@ -55,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="profile-box" id="imageBox">
             <img class="profile-placeholder" id="previewImage"
-                 src="<?= $link; ?>uploads/user/<?= $user['image']; ?>" 
+                 src="<?= $link; ?>upload/user/<?= $user['image']; ?>" 
                  alt="Preview">
             <input type="file" name="image" id="imageInput" accept="image/*" style="display:none;">
         </div>

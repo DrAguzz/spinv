@@ -1,4 +1,16 @@
 <?php 
+session_start();
+
+// 🔒 AUTH CHECK PALING ATAS
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: ../../login.php");
+    exit();
+}
+if (strtolower($_SESSION['role_name']) !== 'accountant') {
+    header("Location: ../../login.php"); // pastikan path betul
+    exit();
+}
+
   $nav = "../";
   $link = "../../include/";
   include($link."container/head.php");
@@ -6,169 +18,210 @@
   require($link . "php/config.php");
   require_once($link . "php/product/product.php");
 
-  // Ambil semua product
+  // Ambil semua product dan kira mengikut kategori
   $products = getAllProducts($conn);
+  
+  // Kira kategori (sesuaikan dengan struktur database anda)
+  $category_counts = [
+    'exotic' => 0,
+    'granite' => 0,
+    'quarts' => 0,
+];
+
+$products_array = [];
+while ($row = $products->fetch_assoc()) {
+    $products_array[] = $row;
+
+    $cat = strtolower($row['finish_name']); // guna finish_name
+    if (isset($category_counts[$cat])) {
+        $category_counts[$cat]++;
+    }
+}
+
+
+
+foreach ($products_array as $row) {
+    if (!empty($row['category'])) {
+        $cat = strtolower($row['category']);
+        if (isset($category_counts[$cat])) {
+            $category_counts[$cat]++;
+        }
+    }
+}
+
+$total_products = count($products_array);
 ?>
+
 
 <!-- Main Content -->
 <div class="main">
-  <!-- Header Section -->
-  <div class="header">
-    <h2 class="header-title">Product Management</h2>
-  </div>
-
-  <!-- Stats Cards -->
-  <div class="cards">
-    <div class="card">
-      <h3>Total Products</h3>
-      <p><?= $products->num_rows ?></p>
+  <!-- Professional Header -->
+  <div class="dashboard-header-pro">
+    <div class="header-left">
+      <h1 class="header-title-pro">Product Management</h1>
+      <p class="header-subtitle-pro">Manage and track your stone inventory</p>
     </div>
-    <div class="card">
-      <h3>Exotic</h3>
-      <p>0</p>
-    </div>
-    <div class="card">
-      <h3>Granite</h3>
-      <p>0</p>
-    </div>
-    <div class="card">
-      <h3>Off Cut Quarts</h3>
-      <p>0</p>
-    </div>
-  </div>
-
-  <!-- Filters & Search Section -->
-  <div class="product-controls">
-    <!-- Category Filter Tabs -->
-    <div class="category-tabs">
-      <button class="tab-btn active" data-category="all">
-        All Products
-      </button>
-      <button class="tab-btn" data-category="exotic">
-        Exotic
-      </button>
-      <button class="tab-btn" data-category="granite">
-        Granite
-      </button>
-      <button class="tab-btn" data-category="quarts">
-        Off Cut Quarts
-      </button>
-    </div>
-
-    <!-- Search & Action Buttons -->
-    <div class="action-controls">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search product..." />
-        <button class="btn-search">Search</button>
+    <div class="header-right">
+      <div class="date-display">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span><?= date('d M Y') ?></span>
       </div>
-      
-      <!-- Export Button -->
-      <button class="btn-export" onclick="window.location.href='export-excel.php'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        Export Excel
-      </button>
-      
-      <!-- Add Product Button - Opens Modal -->
-      <button class="btn-add" onclick="openAddModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Add Product
-      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card stat-primary">
+        <div class="stat-content">
+            <div class="stat-label">Total Products</div>
+            <div class="stat-value"><?= $total_products ?></div>
+            <div class="stat-info">All inventory items</div>
+        </div>
+    </div>
+
+    <div class="stat-card stat-secondary">
+        <div class="stat-content">
+            <div class="stat-label">Exotic</div>
+            <div class="stat-value"><?= $category_counts['exotic'] ?></div>
+            <div class="stat-info">Premium category</div>
+        </div>
+    </div>
+
+    <div class="stat-card stat-warning">
+        <div class="stat-content">
+            <div class="stat-label">Granite</div>
+            <div class="stat-value"><?= $category_counts['granite'] ?></div>
+            <div class="stat-info">Natural stone</div>
+        </div>
+    </div>
+
+    <div class="stat-card stat-info">
+        <div class="stat-content">
+            <div class="stat-label">Off Cut Quarts</div>
+            <div class="stat-value"><?= $category_counts['quarts'] ?></div>
+            <div class="stat-info">Engineered stone</div>
+        </div>
+    </div>
+</div>
+
+
+  <!-- Product Controls Section -->
+  <div class="section-container">
+    <div class="section-header-clean">
+      <div>
+        <h2 class="section-title-clean">Product Inventory</h2>
+        <p class="section-desc">Browse and manage your stone products</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="btn-export" onclick="window.location.href='export-excel.php'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export Excel
+        </button>
+        <button class="btn-add" onclick="openAddModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Product
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Tabs -->
+   <div class="category-tabs"> 
+    <button class="tab-btn active" data-category="all"> 
+      <span class="tab-icon">📦</span> 
+      All Products 
+    </button> 
+    <button class="tab-btn" data-category="exotic"> 
+      <span class="tab-icon">💎</span> 
+        Exotic 
+    </button> 
+    <button class="tab-btn" data-category="granite"> 
+      <span class="tab-icon">🪨</span> 
+      Granite 
+    </button> 
+    <button class="tab-btn" data-category="quarts"> 
+      <span class="tab-icon">✨</span> 
+      Off Cut Quarts </button> 
+    </div>
+
+
+    <!-- Search Box -->
+    <div class="search-box-clean" style="margin-top: 20px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search products by ID, description, finish..." />
     </div>
   </div>
 
   <!-- Product Table -->
-  <div class="table-container">
-    <table id="productTable">
-      <thead>
-        <tr>
-          <th>Product ID</th>
-          <th>Description</th>
-          <th>Finish</th>
-          <th>Length (cm)</th>
-          <th>Width (cm)</th>
-          <th class="text-center">Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <?php if ($products->num_rows === 0): ?>
+  <div class="section-container">
+    <div class="table-wrapper">
+      <table class="data-table" id="productTable">
+        <thead>
           <tr>
-            <td colspan="6" class="empty-state">
-              <div class="empty-icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="9" y1="9" x2="15" y2="15"></line>
-                  <line x1="15" y1="9" x2="9" y2="15"></line>
-                </svg>
-              </div>
-              <div class="empty-text">No products found</div>
-              <div class="empty-subtext">Start by adding your first product</div>
-            </td>
+            <th>Product ID</th>
+            <th>Description</th>
+            <th>Finish</th>
+            <th>Length (cm)</th>
+            <th>Width (cm)</th>
+            <th class="text-center">Actions</th>
           </tr>
-        <?php else: ?>
-          <?php while ($row = $products->fetch_assoc()): ?>
-            <tr class="product-row">
-              <td class="product-id">
-                <strong><?= htmlspecialchars($row['stock_id']); ?></strong>
-              </td>
-              <td class="product-desc">
-                <?= htmlspecialchars($row['description']); ?>
-              </td>
-              <td>
-                <span class="badge badge-finish">
-                  <?= htmlspecialchars($row['finish_name']); ?>
-                </span>
-              </td>
-              <td><?= htmlspecialchars($row['length']); ?></td>
-              <td><?= htmlspecialchars($row['width']); ?></td>
-              <td class="action-cell">
-                <div class="action-buttons">
-                  <!-- View Button -->
-                  <button 
-                    onclick="window.location.href='detail.php?id=<?= $row['id']; ?>'" 
-                    class="btn-action btn-view"
-                    title="View Details">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
+        </thead>
+
+        <tbody>
+          <?php if (count($products_array) === 0): ?>
+            <tr>
+              <td colspan="6" class="empty-state-row">
+                <div class="empty-state-content">
+                  <div class="empty-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="9" y1="9" x2="15" y2="15"></line>
+                      <line x1="15" y1="9" x2="9" y2="15"></line>
                     </svg>
-                  </button>
-                  
-                  <!-- Out Button -->
-                  <button 
-                    onclick="window.location.href='product-out.php?id=<?= $row['id']; ?>'"
-                    class="btn-action btn-out"
-                    title="Stock Out">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <polyline points="19 12 12 19 5 12"></polyline>
-                    </svg>
-                  </button>
-                  
-                  <!-- Delete Button -->
-                  <button
-                    class="btn-action btn-delete"
-                    onclick="if (confirm('Are you sure you want to delete this product?')) window.location.href='product-delete.php?id=<?= $row['id'] ?>';"
-                    title="Delete Product">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
+                  </div>
+                  <div class="empty-title">No products found</div>
+                  <div class="empty-desc">Start by adding your first product to the inventory</div>
                 </div>
               </td>
             </tr>
-          <?php endwhile; ?>
-        <?php endif; ?>
-      </tbody>
-    </table>
+          <?php else: ?>
+            <?php foreach ($products_array as $row): ?>
+<tr class="data-row product-row" data-category="<?= strtolower($row['finish_name']); ?>">
+    <td class="cell-id"><?= htmlspecialchars($row['stock_id']); ?></td>
+    <td class="cell-text"><?= htmlspecialchars($row['description']); ?></td>
+    <td>
+        <span class="badge-type"><?= htmlspecialchars($row['finish_name']); ?></span>
+    </td>
+    <td class="cell-number"><?= htmlspecialchars($row['length']); ?></td>
+    <td class="cell-number"><?= htmlspecialchars($row['width']); ?></td>
+    <td>
+        <div class="action-group">
+            <button onclick="window.location.href='detail.php?id=<?= $row['id']; ?>'" class="action-btn action-view" title="View Details"> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"> <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path> <circle cx="12" cy="12" r="3"></circle> </svg> </button>
+            <button onclick="window.location.href='product-out.php?id=<?= $row['id']; ?>'" class="action-btn action-approve" title="Stock Out"> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"> <line x1="12" y1="5" x2="12" y2="19"></line> <polyline points="19 12 12 19 5 12"></polyline> </svg> </button>
+            <button class="action-btn action-reject" onclick="if (confirm('Are you sure you want to delete this product?')) window.location.href='product-delete.php?id=<?= $row['id'] ?>';" title="Delete Product"> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"> <polyline points="3 6 5 6 21 6"></polyline> <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path> </svg> </button>
+        </div>
+    </td>
+</tr>
+<?php endforeach; ?>
+
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -244,6 +297,8 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
   
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
+    if (row.classList.contains('empty-state-row')) continue;
+    
     const text = row.textContent.toLowerCase();
     
     if (text.includes(searchValue)) {
@@ -254,17 +309,36 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
   }
 });
 
+// Category Filter
+
+
 // Category Filter Tabs
 const tabButtons = document.querySelectorAll('.tab-btn');
 tabButtons.forEach(btn => {
   btn.addEventListener('click', function() {
+    // Remove active class from all buttons
     tabButtons.forEach(b => b.classList.remove('active'));
+    
+    // Add active class to clicked button
     this.classList.add('active');
     
+    // Get selected category
     const category = this.getAttribute('data-category');
-    console.log('Filter by:', category);
+    
+    // Filter rows
+    const rows = document.querySelectorAll('.product-row');
+    rows.forEach(row => {
+      const rowCategory = row.getAttribute('data-category');
+      
+      if (category === 'all' || rowCategory === category) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
   });
 });
+
 
 // Modal Functions
 function openAddModal() {

@@ -1,38 +1,54 @@
 <?php 
-  session_start();
-  $nav = "./";
-  $link = "../include/";
-  include($link."container/head.php");
-  include($link."container/nav.php");
-  require($link . "php/config.php");
-  require_once($link . "php/dashboard/dashboard.php");
+session_start();
 
-  // Handle approve/reject actions
-  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-      $stock_id = $_POST['stock_id'] ?? 0;
-      $action = $_POST['action'] ?? '';
-      $accountant_id = $_SESSION['user_id'] ?? 1;
-      
-      if ($action === 'approve') {
-          if (approveProduct($conn, $stock_id, $accountant_id)) {
-              $success_msg = "Product approved successfully!";
-          } else {
-              $error_msg = "Failed to approve product.";
-          }
-      } elseif ($action === 'reject') {
-          $reason = $_POST['reason'] ?? '';
-          if (rejectProduct($conn, $stock_id, $accountant_id, $reason)) {
-              $success_msg = "Product rejected successfully!";
-          } else {
-              $error_msg = "Failed to reject product.";
-          }
-      }
-  }
+// 🔒 AUTH CHECK PALING ATAS
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: ../login.php");
+    exit();
+}
+if (strtolower($_SESSION['role_name']) !== 'accountant') {
+    header("Location: ../login.php"); // pastikan path betul
+    exit();
+}
 
-  // Get dashboard data
-  $stats = getDashboardStats($conn);
-  $pendingProducts = getPendingProducts($conn);
-  $marbleTypes = getMarbleTypeCounts($conn);
+
+// BARU LOAD CONFIG & FUNCTION
+$link = "../include/";
+require($link . "php/config.php");
+require_once($link . "php/dashboard/dashboard.php");
+
+// BARU LOAD HTML
+$nav = "./";
+include($link . "container/head.php");
+include($link . "container/nav.php");
+
+// =============================
+// HANDLE POST ACTIONS
+// =============================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $stock_id = $_POST['stock_id'] ?? 0;
+    $action = $_POST['action'] ?? '';
+    $accountant_id = $_SESSION['user_id'];
+
+    if ($action === 'approve') {
+        $success_msg = approveProduct($conn, $stock_id, $accountant_id)
+            ? "Product approved successfully!"
+            : "Failed to approve product.";
+    }
+
+    if ($action === 'reject') {
+        $reason = $_POST['reason'] ?? '';
+        $success_msg = rejectProduct($conn, $stock_id, $accountant_id, $reason)
+            ? "Product rejected successfully!"
+            : "Failed to reject product.";
+    }
+}
+
+// DASHBOARD DATA
+$stats = getDashboardStats($conn);
+$pendingProducts = getPendingProducts($conn);
+$marbleTypes = getMarbleTypeCounts($conn);
+
 ?>
 
 <div class="main">

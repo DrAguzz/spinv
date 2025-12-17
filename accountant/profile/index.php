@@ -1,4 +1,15 @@
 <?php
+session_start();
+
+// 🔒 AUTH CHECK PALING ATAS
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: ../../login.php");
+    exit();
+}
+if (strtolower($_SESSION['role_name']) !== 'accountant') {
+    header("Location: ../../login.php"); // pastikan path betul
+    exit();
+}
 $nav = "../";
 $link = "../../include/";
 include($link."container/head.php");
@@ -7,6 +18,7 @@ require($link . "php/config.php");
 require_once($link . "php/profile/profile.php");
 
 $user = getAccountant($conn);
+
 ?>
 
 <!-- Main -->
@@ -15,7 +27,7 @@ $user = getAccountant($conn);
 
         <div class="profile-box">
             <img class="profile-placeholder" id="previewImage"
-                 src="<?= $link; ?>uploads/user/<?= $user['image']; ?>" 
+                 src="<?= $link; ?>upload/user/<?= $user['image']; ?>" 
                  alt="Preview">
         </div>
 

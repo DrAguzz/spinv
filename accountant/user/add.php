@@ -1,11 +1,22 @@
 <?php 
+session_start();
+
+// 🔒 AUTH CHECK PALING ATAS
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: ../../login.php");
+    exit();
+}
+if (strtolower($_SESSION['role_name']) !== 'accountant') {
+    header("Location: ../../login.php"); // pastikan path betul
+    exit();
+}
   $nav = "../";
   $link = "../../include/";
   include($link."container/head.php");
   include($link."container/nav.php");
   require($link . "php/config.php");
   require_once($link . "php/userManagement/user.php");
-
+  
   $roles = getRoleList($conn);
 
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -22,14 +33,13 @@
 <!-- Main -->
 <div class="umMain">
   <form class="user-management" action="" method="post" enctype="multipart/form-data">
-    
-    <div class="profile-box" id="imageBox">
-      <img class="profile-placeholder" id="previewImage" src="data:image/svg+xml;utf8,
+    <div id="imageBox">
+      <img class="profile-placeholder profile-box" style="max-width: 300px;"  id="previewImage" src="data:image/svg+xml;utf8,
                         <svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'>
                             <rect width='100%' height='100%' fill='%23f0f0f0'/>
                             <text x='50%' y='50%' font-size='60' fill='%23999' text-anchor='middle' dominant-baseline='middle'>+</text>
                         </svg>" alt="Preview">
-      <input type="file" name="image" id="imageInput" accept="image/*" style="display:none;">
+        <input type="file" name="image" id="imageInput" accept="image/*" style="display:none;">
     </div>
     <div class="form">
       <h2>User Management</h2>

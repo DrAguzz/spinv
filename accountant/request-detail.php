@@ -1,6 +1,19 @@
 <?php 
   $nav = "./";
   $link = "../include/";
+
+  session_start();
+
+// 🔒 AUTH CHECK PALING ATAS
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: ../login.php");
+    exit();
+}
+if (strtolower($_SESSION['role_name']) !== 'accountant') {
+    header("Location: ../login.php"); // pastikan path betul
+    exit();
+}
+
   include($link."container/head.php");
   include($link."container/nav.php");
   require($link . "php/config.php");

@@ -49,12 +49,13 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
 
     </div>
     <div>
-    <button class="add-btn" onclick="window.location.href='add.php'">Add User +</button>
+      <button class="btn btn-primary" onclick="window.location.href='add.php'">Add User +</button>
+      <button class="btn btn-secondary" onclick="window.location.href='role_index.php'"> Manage Roles </button>
     </div>
     <!-- Table -->
     <table>
     <!-- User table -->
-    <table>
+    <table style="margin-top: 30px;">
       <thead>
         <tr>
           <th>User ID</th>

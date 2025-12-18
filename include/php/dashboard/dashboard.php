@@ -53,7 +53,7 @@ function getPendingProductDetail($conn, $id) {
             sr.record_id
         FROM stock s
         LEFT JOIN marble_type mt ON s.type_id = mt.type_id
-        LEFT JOIN stock_record sr ON s.stock_id = sr.stock_id AND sr.status = 3
+        LEFT JOIN stock_record sr ON s.stock_id = sr.stock_id AND s.status = 3
         LEFT JOIN user u ON sr.user_id = u.user_id
         WHERE s.id = ? AND s.status = 3
         LIMIT 1

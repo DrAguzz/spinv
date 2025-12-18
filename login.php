@@ -1,4 +1,21 @@
 <?php
+session_start();
+
+// Jika dah login, redirect ke page role masing-masing
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+    $redirect = '';
+    switch (strtolower($_SESSION['role_name'])) {
+        case 'accountant':
+            $redirect = 'accountant/accountant/index.php';
+            break;
+        case 'production':
+            $redirect = 'productionManager/production/production_dashboard.php';
+            break;
+    }
+    header("Location: $redirect");
+    exit();
+}
+
 // Contoh penggunaan dalam login.php
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     include 'include/php/config.php'; // File connection database
@@ -218,6 +235,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-size: 14px;
             border-left: 4px solid #c0392b;
             font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .role-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .role-info h4 {
+            color: #ffffff;
+            font-size: 13px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .role-info ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .role-info li {
+            color: rgba(255,255,255,0.9);
+            font-size: 12px;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .role-info li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: rgba(255,255,255,0.6);
         }
         
         @media (max-width: 768px) {
@@ -233,6 +299,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             .logo {
                 margin-bottom: 30px;
             }
+
+            .role-info {
+                margin-top: 20px;
+            }
         }
     </style>
 </head>
@@ -241,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="left-section">
             <div class="logo">
                 <div class="logo-text">
-                    <img src="./image/stone-logo.png" alt="">
+                    <img src="./image/stone-logo.png" alt="SPInventory Logo">
                 </div>
             </div>
             
@@ -254,15 +324,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="right-section">
             <?php if (isset($error_message)): ?>
                 <div class="error-message">
-                    <?php echo htmlspecialchars($error_message); ?>
+                    ❌ <?php echo htmlspecialchars($error_message); ?>
                 </div>
             <?php endif; ?>
             
             <form method="POST" action="" class="login-form">
                 <div class="form-group">
-                    <label for="email">email</label>
+                    <label for="email">Email</label>
                     <input type="email" id="email" name="email" required 
-                           placeholder="Enter your email">
+                           placeholder="Enter your email"
+                           value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
                 </div>
                 
                 <div class="form-group">
@@ -273,6 +344,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 <button type="submit" class="btn-login">Login</button>
             </form>
+
+            <!-- <div class="role-info">
+                <h4>ℹ️ System Roles</h4>
+                <ul>
+                    <li><strong>Accountant:</strong> Full access to manage products, users & categories</li>
+                    <li><strong>Production:</strong> View-only access for stock monitoring & reports</li>
+                </ul>
+            </div> -->
         </div>
     </div>
 </body>

@@ -215,7 +215,7 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
   <div class="image-preview-section">
     <h3>Product Image</h3>
     <div class="image-preview-container">
-      <img src="<?= $link ?>uploads/product/<?= htmlspecialchars($product['image']) ?>" 
+      <img src="<?= $link ?>upload/product/<?= htmlspecialchars($product['image']) ?>" 
            alt="Product Image"
            class="product-preview-image">
     </div>

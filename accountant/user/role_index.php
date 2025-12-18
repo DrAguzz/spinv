@@ -53,10 +53,10 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
         <?php endif; ?>
         
         <div>
-            <button class="add-btn" onclick="window.location.href='./role_add.php'">Add Role +</button>
+            <!-- <button class="add-btn" onclick="window.location.href='./role_add.php'">Add Role +</button> -->
         </div>
         
-        <table>
+        <table style="margin-top: 40px;">
             <thead>
                 <tr>
                     <th>Role ID</th>

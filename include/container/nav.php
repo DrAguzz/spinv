@@ -33,7 +33,7 @@
 
 <?php if (strtolower($_SESSION['role_name']) === 'production'): ?>
     <!-- Navigation untuk Production Manager -->
-    <div class="sidebar" style="display:flex;flex-direction:column;height:100vh;padding:20px;box-sizing:border-box;background:#f8f9fa;">
+    <div class="sidebar" style="color: black;display:flex;flex-direction:column;height:100vh;padding:20px;box-sizing:border-box;background:#f8f9fa;">
     
         <!-- Profile Section -->
         <div class="profile" style="margin-bottom:30px;">

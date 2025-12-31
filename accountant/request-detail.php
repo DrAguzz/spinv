@@ -1,8 +1,5 @@
 <?php 
-  $nav = "./";
-  $link = "../include/";
-
-  session_start();
+session_start();
 
 // 🔒 AUTH CHECK PALING ATAS
 if (!isset($_SESSION['logged_in'])) {
@@ -10,49 +7,57 @@ if (!isset($_SESSION['logged_in'])) {
     exit();
 }
 if (strtolower($_SESSION['role_name']) !== 'accountant') {
-    header("Location: ../login.php"); // pastikan path betul
+    header("Location: ../login.php");
     exit();
 }
 
-  include($link."container/head.php");
-  include($link."container/nav.php");
-  require($link . "php/config.php");
-  require_once($link . "php/dashboard/dashboard.php");
+$nav = "./";
+$link = "../include/";
 
-  // Get stock ID from URL
-  $stock_id = $_GET['id'] ?? 0;
+include($link."container/head.php");
+include($link."container/nav.php");
+require($link . "php/config.php");
+require_once($link . "php/dashboard/dashboard.php");
 
-  // Get product detail
-  $product = getPendingProductDetail($conn, $stock_id);
+// Get stock ID from URL
+$stock_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-  // If product not found, redirect back
-  if (!$product) {
-      echo "<script>alert('Product not found!'); window.location.href='index.php';</script>";
-      exit();
-  }
+if ($stock_id <= 0) {
+    echo "<script>alert('Invalid product ID!'); window.location.href='index.php';</script>";
+    exit();
+}
 
-  // Handle approve/reject actions
-  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-      $action = $_POST['action'] ?? '';
-      $accountant_id = $_SESSION['user_id'] ?? 1;
-      
-      if ($action === 'approve') {
-          if (approveProduct($conn, $stock_id, $accountant_id)) {
-              echo "<script>alert('Product approved successfully!'); window.location.href='index.php';</script>";
-              exit();
-          } else {
-              $error_msg = "Failed to approve product.";
-          }
-      } elseif ($action === 'reject') {
-          $reason = $_POST['reason'] ?? '';
-          if (rejectProduct($conn, $stock_id, $accountant_id, $reason)) {
-              echo "<script>alert('Product rejected successfully!'); window.location.href='index.php';</script>";
-              exit();
-          } else {
-              $error_msg = "Failed to reject product.";
-          }
-      }
-  }
+// Get product detail
+$product = getPendingProductDetail($conn, $stock_id);
+
+// If product not found, redirect back
+if (!$product) {
+    echo "<script>alert('Product not found or already processed!'); window.location.href='index.php';</script>";
+    exit();
+}
+
+// Handle approve/reject actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    $accountant_id = $_SESSION['user_id'];
+    
+    if ($action === 'approve') {
+        if (approveProduct($conn, $stock_id, $accountant_id)) {
+            echo "<script>alert('Product approved successfully!'); window.location.href='index.php';</script>";
+            exit();
+        } else {
+            $error_msg = "Failed to approve product.";
+        }
+    } elseif ($action === 'reject') {
+        $reason = $_POST['reason'] ?? '';
+        if (rejectProduct($conn, $stock_id, $accountant_id, $reason)) {
+            echo "<script>alert('Product rejected successfully!'); window.location.href='index.php';</script>";
+            exit();
+        } else {
+            $error_msg = "Failed to reject product.";
+        }
+    }
+}
 ?>
 
 <!-- Main Content -->
@@ -183,8 +188,8 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
         <div class="detail-row">
           <span class="detail-label">Request Type</span>
           <span class="detail-value">
-            <span class="badge badge-<?= $product['action_type'] ?>">
-              <?= ucfirst($product['action_type']) ?>
+            <span class="badge badge-<?= htmlspecialchars($product['action_type']) ?>">
+              <?= ucfirst(htmlspecialchars($product['action_type'])) ?>
             </span>
           </span>
         </div>
@@ -200,7 +205,7 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
           <span class="detail-label">Request Date</span>
           <span class="detail-value"><?= date('M d, Y H:i', strtotime($product['action_date'])) ?></span>
         </div>
-        <?php if ($product['note']): ?>
+        <?php if (!empty($product['note'])): ?>
         <div class="detail-row">
           <span class="detail-label">Note</span>
           <span class="detail-value"><?= htmlspecialchars($product['note']) ?></span>
@@ -211,13 +216,14 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
   </div>
 
   <!-- Product Image -->
-  <?php if ($product['image']): ?>
+  <?php if (!empty($product['image'])): ?>
   <div class="image-preview-section">
     <h3>Product Image</h3>
     <div class="image-preview-container">
       <img src="<?= $link ?>upload/product/<?= htmlspecialchars($product['image']) ?>" 
            alt="Product Image"
-           class="product-preview-image">
+           class="product-preview-image"
+           onerror="this.style.display='none'; this.parentElement.innerHTML='<p>Image not available</p>';">
     </div>
   </div>
   <?php endif; ?>
@@ -312,6 +318,14 @@ document.addEventListener('keydown', function(e) {
     closeRejectModal();
   }
 });
+
+// Auto-hide alerts
+setTimeout(() => {
+  document.querySelectorAll('.alert').forEach(alert => {
+    alert.style.opacity = '0';
+    setTimeout(() => alert.remove(), 300);
+  });
+}, 5000);
 </script>
 
 <?php 

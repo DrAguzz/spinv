@@ -115,6 +115,31 @@ function getProductById($conn, $id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
+function deleteProductId($conn, $id){
+    $sql = "SELECT image FROM stock WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $product_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_assoc();
+
+    if ($data && !empty($data['image'])) {
+        $imagePath = "uploads/" . $data['image'];
+
+        if (file_exists($imagePath)) {
+            unlink($imagePath); // buang gambar
+        }
+    }
+
+    $sql1 = "DELETE FROM stock WHERE id = ?";
+    $stmt1 = $conn->prepare($sql1);
+    $stmt1->bind_param("i", $product_id);
+    $stmt1->execute();
+
+    return $stmt1->affected_rows;
+
+}
+
 function updateProduct($conn, $data, $file, $id) {
     // Gunakan null coalescing untuk elak warning
     $productId = $data['productId'] ?? null;

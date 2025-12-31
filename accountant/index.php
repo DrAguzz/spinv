@@ -1,54 +1,69 @@
 <?php 
 session_start();
 
-// 🔒 AUTH CHECK PALING ATAS
+// AUTH 
 if (!isset($_SESSION['logged_in'])) {
     header("Location: ../login.php");
     exit();
 }
 if (strtolower($_SESSION['role_name']) !== 'accountant') {
-    header("Location: ../login.php"); // pastikan path betul
+    header("Location: ../login.php");
     exit();
 }
 
-
-// BARU LOAD CONFIG & FUNCTION
 $link = "../include/";
 require($link . "php/config.php");
 require_once($link . "php/dashboard/dashboard.php");
 
-// BARU LOAD HTML
+// LOAD HTML
 $nav = "./";
 include($link . "container/head.php");
 include($link . "container/nav.php");
 
-// =============================
-// HANDLE POST ACTIONS
-// =============================
+// Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $stock_id = $_POST['stock_id'] ?? 0;
+    $stock_id = isset($_POST['stock_id']) ? intval($_POST['stock_id']) : 0;
     $action = $_POST['action'] ?? '';
-    $accountant_id = $_SESSION['user_id'];
+    $accountant_id = $_SESSION['user_id'] ?? 0;
 
-    if ($action === 'approve') {
-        $success_msg = approveProduct($conn, $stock_id, $accountant_id)
-            ? "Product approved successfully!"
-            : "Failed to approve product.";
-    }
+    // Debug logging
+    error_log("POST Request - stock_id: $stock_id, action: $action, accountant_id: $accountant_id");
+    error_log("POST Data: " . print_r($_POST, true));
 
-    if ($action === 'reject') {
-        $reason = $_POST['reason'] ?? '';
-        $success_msg = rejectProduct($conn, $stock_id, $accountant_id, $reason)
-            ? "Product rejected successfully!"
-            : "Failed to reject product.";
+    if ($stock_id > 0 && $accountant_id > 0) {
+        if ($action === 'approve') {
+            error_log("Attempting to approve stock_id: $stock_id");
+            $result = approveProduct($conn, $stock_id, $accountant_id);
+            error_log("Approve result: " . ($result ? "SUCCESS" : "FAILED"));
+            
+            if ($result) {
+                $success_msg = "Product approved successfully!";
+            } else {
+                $error_msg = "Failed to approve product. Please check the logs.";
+            }
+        }
+
+        if ($action === 'reject') {
+            $reason = $_POST['reason'] ?? '';
+            error_log("Attempting to reject stock_id: $stock_id with reason: $reason");
+            $result = rejectProduct($conn, $stock_id, $accountant_id, $reason);
+            error_log("Reject result: " . ($result ? "SUCCESS" : "FAILED"));
+            
+            if ($result) {
+                $success_msg = "Product rejected successfully!";
+            } else {
+                $error_msg = "Failed to reject product. Please check the logs.";
+            }
+        }
+    } else {
+        $error_msg = "Invalid stock ID or user session.";
+        error_log("Invalid data - stock_id: $stock_id, accountant_id: $accountant_id");
     }
 }
 
-// DASHBOARD DATA
 $stats = getDashboardStats($conn);
 $pendingProducts = getPendingProducts($conn);
 $marbleTypes = getMarbleTypeCounts($conn);
-
 ?>
 
 <div class="main">
@@ -177,12 +192,12 @@ $marbleTypes = getMarbleTypeCounts($conn);
         <div class="category-card">
           <div class="category-header">
             <div class="category-code"><?= htmlspecialchars($type['code']) ?></div>
-            <div class="category-badge"><?= $type['total_count'] ?> items</div>
+            <div class="category-badge"><?= intval($type['total_count']) ?> items</div>
           </div>
           <div class="category-name"><?= htmlspecialchars($type['name']) ?></div>
           <div class="category-stats-row">
             <div class="category-stat">
-              <span class="stat-number"><?= $type['total_qty'] ?? 0 ?></span>
+              <span class="stat-number"><?= intval($type['total_qty'] ?? 0) ?></span>
               <span class="stat-text">pieces</span>
             </div>
           </div>
@@ -191,7 +206,7 @@ $marbleTypes = getMarbleTypeCounts($conn);
     </div>
   </div>
 
-  <!-- Pending Approvals Section -->
+  <!-- Pending Section -->
   <div class="section-container">
     <div class="section-header-clean">
       <div>
@@ -266,7 +281,7 @@ $marbleTypes = getMarbleTypeCounts($conn);
                 <td>
                   <div class="action-group">
                     <button 
-                      onclick="window.location.href='request-detail.php?id=<?= $product['id'] ?>'"
+                      onclick="window.location.href='request-detail.php?id=<?= intval($product['stock_id']) ?>'"
                       class="action-btn action-view"
                       title="View Details">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -275,8 +290,8 @@ $marbleTypes = getMarbleTypeCounts($conn);
                       </svg>
                     </button>
                     
-                    <form method="POST" style="display: inline;" onsubmit="return confirm('Approve this request?')">
-                      <input type="hidden" name="stock_id" value="<?= $product['id'] ?>">
+                    <form method="POST" style="display: inline;" onsubmit="return confirmApprove(<?= intval($product['stock_id']) ?>)">
+                      <input type="hidden" name="stock_id" value="<?= intval($product['stock_id']) ?>">
                       <input type="hidden" name="action" value="approve">
                       <button type="submit" class="action-btn action-approve" title="Approve">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -286,7 +301,7 @@ $marbleTypes = getMarbleTypeCounts($conn);
                     </form>
                     
                     <button 
-                      onclick="showRejectModal(<?= $product['id'] ?>)"
+                      onclick="showRejectModal(<?= intval($product['stock_id']) ?>)"
                       class="action-btn action-reject" 
                       title="Reject">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -395,8 +410,15 @@ document.getElementById('searchRequest').addEventListener('keyup', function() {
   });
 });
 
+// Confirm approve
+function confirmApprove(stockId) {
+  console.log('Confirming approve for stock_id:', stockId);
+  return confirm('Are you sure you want to approve this request?');
+}
+
 // Reject Modal
 function showRejectModal(stockId) {
+  console.log('Showing reject modal for stock_id:', stockId);
   document.getElementById('rejectStockId').value = stockId;
   document.getElementById('rejectModal').classList.add('active');
   document.body.style.overflow = 'hidden';

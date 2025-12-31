@@ -1,7 +1,7 @@
 <?php 
 session_start();
 
-// 🔒 AUTH CHECK PALING ATAS
+
 if (!isset($_SESSION['logged_in'])) {
     header("Location: ../../login.php");
     exit();
@@ -25,13 +25,13 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 $productId = $_GET['id'];
 
-// Dapatkan data produk
+//function product id
 $product = getProductById($conn, $productId);
 if (!$product) {
     die("Product tidak ditemui.");
 }
 
-// Dapatkan finish dari DB
+// finish dari DB
 $marbleTypes = getFinishList($conn);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

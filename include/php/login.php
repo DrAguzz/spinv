@@ -27,6 +27,7 @@ function loginUser($email, $password, $conn) {
             $_SESSION['username']  = $user['username'];
             $_SESSION['role_id']   = $user['role_id'];
             $_SESSION['role_name'] = $user['role_name'];
+            $_SESSION['image'] = $user['image'];
             $_SESSION['logged_in'] = true;
 
             // Determine redirect based on role

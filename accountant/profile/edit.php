@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// 🔒 AUTH CHECK PALING ATAS
+
 if (!isset($_SESSION['logged_in'])) {
     header("Location: ../../login.php");
     exit();
@@ -36,13 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $name     = $_POST['name'];
     $email    = $_POST['email'];
-    $password = $_POST['password'];   // boleh kosong
+    $password = $_POST['password'];   
 
     // Handle upload image
     $imageName = "";
     if (!empty($_FILES['image']['name'])) {
         $imageName = time() . "_" . $_FILES['image']['name'];
-        move_uploaded_file($_FILES['image']['tmp_name'], "../include/uploads/user/" . $imageName);
+        move_uploaded_file($_FILES['image']['tmp_name'], $link."upload/user/" . $imageName);
     }
 
     // Update accountant

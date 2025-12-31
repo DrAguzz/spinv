@@ -6,7 +6,7 @@
         <!-- Profile Section -->
         <div class="profile" style="margin-bottom:30px;">
             <div class="profile-img" style="width:50px;height:50px;border-radius:50%;overflow:hidden;margin-bottom:10px;">
-                <img src="<?= $link ?>/upload/user/1764081370_WhatsApp Image 2024-09-10 at 23.52.40_da6b03f3.jpg" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
+                <img src="<?= $link ?>/upload/user/<?= $_SESSION['image'] ?>" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
             </div>
             <div class="profile-info">
                 <div class="profile-name" style="font-weight:600;"><p>welcome! <br> <?= $_SESSION['username'] ?></p></div>

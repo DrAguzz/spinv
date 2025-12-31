@@ -3,7 +3,7 @@
   $link = "../../include/";
   session_start();
 
-// 🔒 AUTH CHECK PALING ATAS
+
 if (!isset($_SESSION['logged_in'])) {
     header("Location: ../../login.php");
     exit();

@@ -232,8 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="action-section">
     <h3>Review Actions</h3>
     <div class="action-button-group">
-      <!-- Reject Button -->
-      <button class="btn-action-large btn-reject-large" onclick="showRejectModal()">
+      <button class="btn-action-large btn-reject-large" onclick="showRejectModal(<?= intval($product['id']) ?>)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="15" y1="9" x2="9" y2="15"></line>
@@ -241,18 +240,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </svg>
         Reject Request
       </button>
+  <!-- Approve Button (KIRI - Primary Action) -->
+  <form method="POST" style="flex: 1;" onsubmit="return confirm('Are you sure you want to approve this product?')">
+    <input type="hidden" name="stock_id" value="<?= intval($product['id']) ?>">
+    <input type="hidden" name="action" value="approve">
+    <button type="submit" class="btn-action-large btn-approve-large">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      Approve Request
+    </button>
+  </form>
 
-      <!-- Approve Button -->
-      <form method="POST" style="flex: 1;" onsubmit="return confirm('Are you sure you want to approve this product?')">
-        <input type="hidden" name="action" value="approve">
-        <button type="submit" class="btn-action-large btn-approve-large">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          Approve Request
-        </button>
-      </form>
-    </div>
+  <!-- Reject Button (KANAN - Secondary Action) -->
+</div>
   </div>
 </div>
 

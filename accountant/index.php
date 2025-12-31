@@ -22,17 +22,29 @@ include($link . "container/nav.php");
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // DEBUG - Uncomment untuk debug
+    error_log("========== DEBUG START ==========");
+    error_log("POST Data: " . print_r($_POST, true));
+    error_log("Session user_id: " . ($_SESSION['user_id'] ?? 'KOSONG'));
+    error_log("stock_id: " . ($_POST['stock_id'] ?? 'KOSONG'));
+    error_log("action: " . ($_POST['action'] ?? 'KOSONG'));
+    error_log("========== DEBUG END ==========");
+
     $stock_id = isset($_POST['stock_id']) ? intval($_POST['stock_id']) : 0;
     $action = $_POST['action'] ?? '';
     $accountant_id = $_SESSION['user_id'] ?? 0;
 
-    // Debug logging
-    error_log("POST Request - stock_id: $stock_id, action: $action, accountant_id: $accountant_id");
-    error_log("POST Data: " . print_r($_POST, true));
-
-    if ($stock_id > 0 && $accountant_id > 0) {
+    // Validate
+    if ($stock_id <= 0) {
+        error_log("ERROR: Invalid stock_id - " . $stock_id);
+        $error_msg = "Invalid stock ID.";
+    } else if ($accountant_id <= 0) {
+        error_log("ERROR: Invalid accountant_id - " . $accountant_id);
+        $error_msg = "Invalid user session.";
+    } else {
+        // Process actions
         if ($action === 'approve') {
-            error_log("Attempting to approve stock_id: $stock_id");
+            error_log("Attempting to approve stock id: $stock_id");
             $result = approveProduct($conn, $stock_id, $accountant_id);
             error_log("Approve result: " . ($result ? "SUCCESS" : "FAILED"));
             
@@ -45,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'reject') {
             $reason = $_POST['reason'] ?? '';
-            error_log("Attempting to reject stock_id: $stock_id with reason: $reason");
+            error_log("Attempting to reject stock id: $stock_id with reason: $reason");
             $result = rejectProduct($conn, $stock_id, $accountant_id, $reason);
             error_log("Reject result: " . ($result ? "SUCCESS" : "FAILED"));
             
@@ -55,9 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_msg = "Failed to reject product. Please check the logs.";
             }
         }
-    } else {
-        $error_msg = "Invalid stock ID or user session.";
-        error_log("Invalid data - stock_id: $stock_id, accountant_id: $accountant_id");
     }
 }
 
@@ -281,7 +290,7 @@ $marbleTypes = getMarbleTypeCounts($conn);
                 <td>
                   <div class="action-group">
                     <button 
-                      onclick="window.location.href='request-detail.php?id=<?= intval($product['stock_id']) ?>'"
+                      onclick="window.location.href='request-detail.php?id=<?= intval($product['id']) ?>'"
                       class="action-btn action-view"
                       title="View Details">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -290,8 +299,8 @@ $marbleTypes = getMarbleTypeCounts($conn);
                       </svg>
                     </button>
                     
-                    <form method="POST" style="display: inline;" onsubmit="return confirmApprove(<?= intval($product['stock_id']) ?>)">
-                      <input type="hidden" name="stock_id" value="<?= intval($product['stock_id']) ?>">
+                    <form method="POST" style="display: inline;" onsubmit="return confirmApprove(<?= intval($product['id']) ?>)">
+                      <input type="hidden" name="stock_id" value="<?= intval($product['id']) ?>">
                       <input type="hidden" name="action" value="approve">
                       <button type="submit" class="action-btn action-approve" title="Approve">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -301,7 +310,7 @@ $marbleTypes = getMarbleTypeCounts($conn);
                     </form>
                     
                     <button 
-                      onclick="showRejectModal(<?= intval($product['stock_id']) ?>)"
+                      onclick="showRejectModal(<?= intval($product['id']) ?>)"
                       class="action-btn action-reject" 
                       title="Reject">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -376,7 +385,7 @@ $marbleTypes = getMarbleTypeCounts($conn);
     </div>
     
     <div class="modal-body">
-      <form method="POST" id="rejectForm">
+      <form method="POST" id="rejectForm" onsubmit="return confirmReject()">
         <input type="hidden" name="stock_id" id="rejectStockId">
         <input type="hidden" name="action" value="reject">
         
@@ -412,22 +421,44 @@ document.getElementById('searchRequest').addEventListener('keyup', function() {
 
 // Confirm approve
 function confirmApprove(stockId) {
-  console.log('Confirming approve for stock_id:', stockId);
+  console.log('Confirming approve for stock id:', stockId);
   return confirm('Are you sure you want to approve this request?');
 }
 
 // Reject Modal
 function showRejectModal(stockId) {
-  console.log('Showing reject modal for stock_id:', stockId);
+  console.log('Showing reject modal for stock id:', stockId);
+  console.log('Type:', typeof stockId);
+  
+  // Set the stock_id value
   document.getElementById('rejectStockId').value = stockId;
+  
+  // Show modal
   document.getElementById('rejectModal').classList.add('active');
   document.body.style.overflow = 'hidden';
+  
+  // Log untuk verify
+  console.log('Stock ID set to:', document.getElementById('rejectStockId').value);
 }
 
 function closeRejectModal() {
   document.getElementById('rejectModal').classList.remove('active');
   document.body.style.overflow = 'auto';
   document.getElementById('rejectForm').reset();
+}
+
+function confirmReject() {
+  const stockId = document.getElementById('rejectStockId').value;
+  const reason = document.getElementById('reason').value;
+  
+  console.log('Submitting reject - stock_id:', stockId, 'reason:', reason);
+  
+  if (!stockId || stockId === '0') {
+    alert('Invalid stock ID');
+    return false;
+  }
+  
+  return confirm('Are you sure you want to reject this request?');
 }
 
 // Close modal on outside click

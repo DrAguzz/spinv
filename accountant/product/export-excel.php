@@ -3,23 +3,17 @@ session_start();
 
 
 if (!isset($_SESSION['logged_in'])) {
-    header("Location: ../../login.php");
+    header("Location: ../login.php");
     exit();
 }
 if (strtolower($_SESSION['role_name']) !== 'accountant') {
-    header("Location: ../../login.php"); // pastikan path betul
+    header("Location: ../login.php"); // pastikan path betul
     exit();
 }
+
 $nav = "../";
   $link = "../../include/";
   require($link . "php/config.php");
-require_once ($link . "php/acc-auth.php");
-
-if ($_SESSION['role_name'] !== 'accountant') {
-    header("Location: /login.php");
-    exit();
-}
-session_start();
 
 // Security: Check if user is logged in (optional - uncomment bila dah ada auth)
 // if (!isset($_SESSION['user_id'])) {

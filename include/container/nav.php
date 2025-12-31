@@ -1,12 +1,17 @@
 <!-- Sidebar Navigation -->
 <?php if (strtolower($_SESSION['role_name']) === 'accountant'): ?>
+<?php
+$user_image = isset($_SESSION['user_image']) && !empty($_SESSION['user_image']) 
+              ? $_SESSION['user_image'] 
+              : 'default.png';      
+?>
     <!-- Navigation untuk Accountant -->
     <div class="sidebar" style="display:flex;flex-direction:column;height:100vh;padding:20px;box-sizing:border-box;">
     
         <!-- Profile Section -->
         <div class="profile" style="margin-bottom:30px;">
             <div class="profile-img" style="width:50px;height:50px;border-radius:50%;overflow:hidden;margin-bottom:10px;">
-                <img src="<?= $link ?>/upload/user/<?= $_SESSION['image'] ?>" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
+                <img src="<?php echo $link.'upload/user/'.$user_image; ?>" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
             </div>
             <div class="profile-info">
                 <div class="profile-name" style="font-weight:600;"><p>welcome! <br> <?= $_SESSION['username'] ?></p></div>

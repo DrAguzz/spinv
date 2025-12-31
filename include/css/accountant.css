@@ -1894,11 +1894,11 @@ td {
 
 .action-button-group {
   display: flex;
-  gap: 15px;
+  gap: 12px;
 }
 
 .action-button-group form {
-  flex: 1;
+  flex: 2;
 }
 
 /* Large Action Buttons */
@@ -1916,6 +1916,7 @@ td {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 100%;
 }
 
 .btn-action-large:hover {
@@ -1930,6 +1931,7 @@ td {
 .btn-reject-large {
   background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: #fff;
+  flex: 1;
 }
 
 .btn-reject-large:hover {

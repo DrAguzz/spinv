@@ -13,21 +13,30 @@
 function getPendingProducts($conn) {
     $sql = "
         SELECT 
+            s.id,
             s.stock_id,
             s.description,
             s.quantity,
             s.total_amount,
+            s.length,
+            s.width,
+            s.total_area,
+            s.cost_per_m2,
+            s.image,
             mt.name AS finish_name,
             mt.code AS marble_code,
+            mt.finish_type,
             sr.action_date,
-            u.username AS requester_name
+            sr.note,
+            u.username AS requester_name,
+            u.email AS requester_email
         FROM stock s
         LEFT JOIN marble_type mt ON s.type_id = mt.type_id
-        LEFT JOIN stock_record sr ON s.stock_id = sr.stock_id 
+        LEFT JOIN stock_record sr ON s.id = sr.stock_id 
             AND sr.record_id = (
                 SELECT MAX(record_id) 
                 FROM stock_record 
-                WHERE stock_id = s.stock_id
+                WHERE stock_id = s.id
             )
         LEFT JOIN user u ON sr.user_id = u.user_id
         WHERE s.status = 3
@@ -37,15 +46,14 @@ function getPendingProducts($conn) {
     return $conn->query($sql);
 }
 
-
 /**
  * Get pending product detail by ID
  * 
  * @param mysqli $conn Database connection
- * @param int $stock_id Stock ID
+ * @param int $id Stock ID (dari stock.id PRIMARY KEY)
  * @return array|null
  */
-function getPendingProductDetail($conn, $stock_id) {
+function getPendingProductDetail($conn, $id) {
     $sql = "
         SELECT 
             s.*,
@@ -57,22 +65,23 @@ function getPendingProductDetail($conn, $stock_id) {
             sr.action_type,
             sr.action_date,
             sr.note,
-            sr.record_id
+            sr.record_id,
+            sr.qty_change
         FROM stock s
         LEFT JOIN marble_type mt ON s.type_id = mt.type_id
-        LEFT JOIN stock_record sr ON s.stock_id = sr.stock_id 
+        LEFT JOIN stock_record sr ON s.id = sr.stock_id 
             AND sr.record_id = (
                 SELECT MAX(record_id) 
                 FROM stock_record 
-                WHERE stock_id = s.stock_id
+                WHERE stock_id = s.id
             )
         LEFT JOIN user u ON sr.user_id = u.user_id
-        WHERE s.stock_id = ? AND s.status = 3
+        WHERE s.id = ? AND s.status = 3
         LIMIT 1
     ";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $stock_id);
+    $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -83,35 +92,43 @@ function getPendingProductDetail($conn, $stock_id) {
  * Approve pending product
  * 
  * @param mysqli $conn Database connection
- * @param int $stock_id Stock ID
+ * @param int $id Stock ID (dari stock.id PRIMARY KEY)
  * @param int $accountant_id User ID accountant yang approve
  * @return bool
  */
-function approveProduct($conn, $stock_id, $accountant_id) {
+function approveProduct($conn, $id, $accountant_id) {
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     
     try {
+        // Validate inputs
+        if (empty($id) || empty($accountant_id)) {
+            error_log("Invalid parameters - id: $id, accountant_id: $accountant_id");
+            return false;
+        }
+
         $conn->begin_transaction();
         
-        // Debug log
-        error_log("Approving stock_id: " . $stock_id . " by accountant: " . $accountant_id);
+        error_log("Approving stock id: " . $id . " by accountant: " . $accountant_id);
         
         // Update stock status to approved (status = 1)
-        $stmt1 = $conn->prepare("UPDATE stock SET status = 1 WHERE stock_id = ? AND status = 3");
-        $stmt1->bind_param("i", $stock_id);
+        $stmt1 = $conn->prepare("UPDATE stock SET status = 1, updated_at = NOW() WHERE id = ? AND status = 3");
+        $stmt1->bind_param("i", $id);
         $result1 = $stmt1->execute();
         $affected = $stmt1->affected_rows;
         
         error_log("Update affected rows: " . $affected);
         
         if ($affected === 0) {
-            throw new Exception("No rows updated - stock_id might not exist or already processed");
+            throw new Exception("No rows updated - stock might not exist or already processed");
         }
 
         // Insert approval record in stock_record
-        $stmt2 = $conn->prepare("INSERT INTO stock_record (stock_id, user_id, action_type, qty_change, note, action_date)
-                                 VALUES (?, ?, 'approved', 0, 'Approved by accountant', NOW())");
-        $stmt2->bind_param("ii", $stock_id, $accountant_id);
+        // stock_record.stock_id merujuk kepada stock.id
+        $stmt2 = $conn->prepare("
+            INSERT INTO stock_record (stock_id, user_id, action_type, qty_change, note, action_date, status) 
+            VALUES (?, ?, 'approved', 0, 'Approved by accountant', NOW(), 1)
+        ");
+        $stmt2->bind_param("ii", $id, $accountant_id);
         $result2 = $stmt2->execute();
         
         error_log("Insert record result: " . ($result2 ? "success" : "failed"));
@@ -128,44 +145,51 @@ function approveProduct($conn, $stock_id, $accountant_id) {
     }
 }
 
-
-
 /**
  * Reject pending product
  * 
  * @param mysqli $conn Database connection
- * @param int $stock_id Stock ID
+ * @param int $id Stock ID (dari stock.id PRIMARY KEY)
  * @param int $accountant_id User ID accountant yang reject
  * @param string $reason Sebab reject
  * @return bool
  */
-function rejectProduct($conn, $stock_id, $accountant_id, $reason = '') {
+function rejectProduct($conn, $id, $accountant_id, $reason = '') {
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     
     try {
+        // Validate inputs
+        if (empty($id) || empty($accountant_id)) {
+            error_log("Invalid parameters - id: $id, accountant_id: $accountant_id");
+            return false;
+        }
+
         $conn->begin_transaction();
         
-        error_log("Rejecting stock_id: " . $stock_id . " by accountant: " . $accountant_id);
+        error_log("Rejecting stock id: " . $id . " by accountant: " . $accountant_id);
         
         // Update stock status to rejected (status = 2)
-        $sql1 = "UPDATE stock SET status = 2 WHERE stock_id = ? AND status = 3";
+        $sql1 = "UPDATE stock SET status = 2, updated_at = NOW() WHERE id = ? AND status = 3";
         $stmt1 = $conn->prepare($sql1);
-        $stmt1->bind_param("i", $stock_id);
+        $stmt1->bind_param("i", $id);
         $result1 = $stmt1->execute();
         $affected = $stmt1->affected_rows;
         
         error_log("Update affected rows: " . $affected);
         
         if ($affected === 0) {
-            throw new Exception("No rows updated - stock_id might not exist or already processed");
+            throw new Exception("No rows updated - stock might not exist or already processed");
         }
         
         // Insert record untuk rejection action
+        // stock_record.stock_id merujuk kepada stock.id
         $note = $reason ? "Rejected: $reason" : "Rejected by accountant";
-        $sql2 = "INSERT INTO stock_record (stock_id, user_id, action_type, qty_change, note, action_date) 
-                 VALUES (?, ?, 'rejected', 0, ?, NOW())";
+        $sql2 = "
+            INSERT INTO stock_record (stock_id, user_id, action_type, qty_change, note, action_date, status) 
+            VALUES (?, ?, 'rejected', 0, ?, NOW(), 2)
+        ";
         $stmt2 = $conn->prepare($sql2);
-        $stmt2->bind_param("iis", $stock_id, $accountant_id, $note);
+        $stmt2->bind_param("iis", $id, $accountant_id, $note);
         $result2 = $stmt2->execute();
         
         error_log("Insert record result: " . ($result2 ? "success" : "failed"));
@@ -213,65 +237,8 @@ function getDashboardStats($conn) {
         'pending_requests' => $pending,
         'approved_products' => $approved,
         'budget_out' => $budgetOut,
-        'estimate_balance' => $budgetOut * 0.6,
-        'profit_loss' => 70,
         'total_quantity' => $totalQty
     ];
-}
-
-/**
- * Get recent activities (last 10)
- * 
- * @param mysqli $conn Database connection
- * @return mysqli_result
- */
-function getRecentActivities($conn) {
-    $sql = "
-        SELECT 
-            sr.*,
-            u.username,
-            s.stock_id,
-            s.description
-        FROM stock_record sr
-        LEFT JOIN user u ON sr.user_id = u.user_id
-        LEFT JOIN stock s ON sr.stock_id = s.stock_id
-        ORDER BY sr.action_date DESC
-        LIMIT 10
-    ";
-    
-    return $conn->query($sql);
-}
-
-/**
- * Get products by marble type
- * 
- * @param mysqli $conn Database connection
- * @param int $type_id Marble Type ID
- * @return mysqli_result
- */
-function getProductsByType($conn, $type_id = null) {
-    if ($type_id) {
-        $sql = "
-            SELECT s.*, mt.name AS finish_name
-            FROM stock s
-            LEFT JOIN marble_type mt ON s.type_id = mt.type_id
-            WHERE s.type_id = ? AND s.status = 1
-            ORDER BY s.stock_id DESC
-        ";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $type_id);
-        $stmt->execute();
-        return $stmt->get_result();
-    } else {
-        $sql = "
-            SELECT s.*, mt.name AS finish_name
-            FROM stock s
-            LEFT JOIN marble_type mt ON s.type_id = mt.type_id
-            WHERE s.status = 1
-            ORDER BY s.stock_id DESC
-        ";
-        return $conn->query($sql);
-    }
 }
 
 /**
@@ -286,11 +253,13 @@ function getMarbleTypeCounts($conn) {
             mt.type_id,
             mt.name,
             mt.code,
-            COUNT(s.stock_id) as total_count,
-            SUM(s.quantity) as total_qty
+            mt.finish_type,
+            COUNT(s.id) as total_count,
+            SUM(s.quantity) as total_qty,
+            SUM(s.total_amount) as total_value
         FROM marble_type mt
         LEFT JOIN stock s ON mt.type_id = s.type_id AND s.status = 1
-        GROUP BY mt.type_id, mt.name, mt.code
+        GROUP BY mt.type_id, mt.name, mt.code, mt.finish_type
         ORDER BY mt.name ASC
     ";
     
@@ -302,5 +271,133 @@ function getMarbleTypeCounts($conn) {
     }
     
     return $types;
+}
+
+/**
+ * Get recent activities (last 10)
+ * 
+ * @param mysqli $conn Database connection
+ * @return mysqli_result
+ */
+function getRecentActivities($conn) {
+    $sql = "
+        SELECT 
+            sr.*,
+            u.username,
+            s.stock_id,
+            s.description,
+            mt.name as marble_name
+        FROM stock_record sr
+        LEFT JOIN user u ON sr.user_id = u.user_id
+        LEFT JOIN stock s ON sr.stock_id = s.id
+        LEFT JOIN marble_type mt ON s.type_id = mt.type_id
+        ORDER BY sr.action_date DESC
+        LIMIT 10
+    ";
+    
+    return $conn->query($sql);
+}
+
+/**
+ * Get all approved products with filters
+ * 
+ * @param mysqli $conn Database connection
+ * @param int|null $type_id Filter by marble type
+ * @param string|null $search Search keyword
+ * @return mysqli_result
+ */
+function getApprovedProducts($conn, $type_id = null, $search = null) {
+    $sql = "
+        SELECT 
+            s.*,
+            mt.name AS finish_name,
+            mt.code AS marble_code,
+            mt.finish_type
+        FROM stock s
+        LEFT JOIN marble_type mt ON s.type_id = mt.type_id
+        WHERE s.status = 1
+    ";
+    
+    $params = [];
+    $types = "";
+    
+    if ($type_id) {
+        $sql .= " AND s.type_id = ?";
+        $params[] = $type_id;
+        $types .= "i";
+    }
+    
+    if ($search) {
+        $sql .= " AND (s.stock_id LIKE ? OR s.description LIKE ? OR mt.name LIKE ?)";
+        $searchParam = "%$search%";
+        $params[] = $searchParam;
+        $params[] = $searchParam;
+        $params[] = $searchParam;
+        $types .= "sss";
+    }
+    
+    $sql .= " ORDER BY s.created_at DESC";
+    
+    if (count($params) > 0) {
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        return $stmt->get_result();
+    }
+    
+    return $conn->query($sql);
+}
+
+/**
+ * Get product detail by ID
+ * 
+ * @param mysqli $conn Database connection
+ * @param int $id Stock ID (dari table stock.id)
+ * @return array|null
+ */
+function getProductDetail($conn, $id) {
+    $sql = "
+        SELECT 
+            s.*,
+            mt.name AS finish_name,
+            mt.code AS marble_code,
+            mt.finish_type
+        FROM stock s
+        LEFT JOIN marble_type mt ON s.type_id = mt.type_id
+        WHERE s.id = ?
+        LIMIT 1
+    ";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->fetch_assoc();
+}
+
+/**
+ * Get stock records/history by stock ID
+ * 
+ * @param mysqli $conn Database connection
+ * @param int $id Stock ID (dari stock.id PRIMARY KEY)
+ * @return mysqli_result
+ */
+function getStockHistory($conn, $id) {
+    $sql = "
+        SELECT 
+            sr.*,
+            u.username
+        FROM stock_record sr
+        LEFT JOIN user u ON sr.user_id = u.user_id
+        WHERE sr.stock_id = ?
+        ORDER BY sr.action_date DESC
+    ";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    
+    return $stmt->get_result();
 }
 ?>

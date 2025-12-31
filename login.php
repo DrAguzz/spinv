@@ -341,6 +341,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <input type="password" id="password" name="password" required 
                            placeholder="Enter your password">
                 </div>
+                <!-- Forgot Password Link -->
+                <div style="text-align: right; margin-bottom: 20px;">
+                    <a href="forgot_password.php" style="color: rgba(255,255,255,0.9); 
+                    text-decoration: none; font-size: 13px; font-weight: 500;">
+                        Forgot Password?
+                    </a>
+                </div>
                 
                 <button type="submit" class="btn-login">Login</button>
             </form>

@@ -160,10 +160,10 @@ table tbody tr:hover {
 
 <div class="main">
     <div class="no-print" style="margin: 20px 0;">
-        <button class="btn btn-secondary" onclick="window.location.href='./production_dashboard.php'">
+        <button class="btn btn-secondary" onclick="window.location.href='./index.php'">
             Back to Dashboard
         </button>
-        <button class="btn btn-primary" onclick="window.print()">
+        <button class="btn btn-primary" onclick="printTable()">
             Print Report
         </button>
         <button class="btn btn-primary" onclick="exportToCSV()">
@@ -171,7 +171,7 @@ table tbody tr:hover {
         </button>
     </div>
     
-    <div class="report-container">
+    <div class="report-container"  id="printTable">
         <!-- Report Header -->
         <div class="report-header">
             <h1>STOCK REPORT</h1>
@@ -192,7 +192,7 @@ table tbody tr:hover {
         </div>
         
         <!-- Summary Section -->
-        <div class="summary-grid">
+        <div class="summary-grid" >
             <div class="summary-box">
                 <div class="label">Total Stock Value</div>
                 <div class="value">RM <?= number_format($total_value, 2); ?></div>
@@ -329,7 +329,7 @@ function exportToCSV() {
     // Header
     data.push(['STOCK REPORT - ' + new Date().toLocaleDateString()]);
     data.push([]);
-    data.push(['Stock ID', 'Description', 'Type', 'Length', 'Width', 'Quantity', 'Total Area', 'Cost/m²', 'Total Amount', 'Status']);
+    data.push(['Stock ID', 'Description', 'Type', 'Dimensions (L×W)', 'Quantity', 'Total Area', 'Cost/m²', 'Total Amount', 'Status']);
     
     // Get table data from Complete Stock List table
     const tables = document.querySelectorAll('.report-section table');
@@ -357,6 +357,120 @@ function exportToCSV() {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+}
+
+function printTable() {
+  var table = document.getElementById("printTable").outerHTML;
+  var win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Print</title>
+        <style>
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #000; padding: 8px; }
+          .report-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    background: white;
+    padding: 40px;
+}
+
+.report-header {
+    text-align: center;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.report-header h1 {
+    margin: 0;
+    color: #333;
+}
+
+.report-info {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 30px 0;
+}
+
+.summary-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 2px solid #dee2e6;
+}
+
+.summary-box .value {
+    font-size: 28px;
+    font-weight: bold;
+    color: #007bff;
+    margin: 10px 0;
+}
+
+.summary-box .label {
+    color: #666;
+    font-size: 14px;
+}
+
+.report-section {
+    margin: 40px 0;
+}
+
+.report-section h2 {
+    color: #007bff;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #dee2e6;
+}
+
+table thead {
+    background: #007bff;
+    color: white;
+}
+
+table tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+table tbody tr:hover {
+    background: #e9ecef;
+}
+        </style>
+      </head>
+      <body>
+        ${table}
+      </body>
+    </html>
+  `);
+
+  win.document.close();
+  win.print();
+  win.close();
 }
 </script>
 

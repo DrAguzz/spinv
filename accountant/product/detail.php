@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Image -->
                 <div>
                     <div class="image-section" id="imageBox">
-                        <img id="previewImage" src="<?= $product['image'] ? $link.'upload/product/'.$product['image'] : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='%23f0f0f0'/><text x='50%' y='50%' font-size='60' fill='%23999' text-anchor='middle' dominant-baseline='middle'>+</text></svg>" ?>" alt="Preview">
+                        <img id="previewImage" src="../../uploads/products/<?= $product['image'] ?>" alt="Preview">
                     </div>
 
                     <input type="file" name="image" id="imageInput" accept="image/*" style="display:none;">

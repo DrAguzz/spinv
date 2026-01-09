@@ -275,7 +275,7 @@ table tbody tr:hover {
                             <tr style="background: <?= $row['quantity'] <= 5 ? '#fff3cd' : '#f8f9fa' ?>;">
                                 <td>
                                     <?php if (!empty($row['image'])): ?>
-                                        <img src="<?= $link ?>/upload/product/<?= htmlspecialchars($row['image']); ?>" alt="Stock Image" class="stock-image">
+                                        <img src="../uploads/products/<?= htmlspecialchars($row['image']); ?>" alt="Stock Image" class="stock-image">
                                     <?php else: ?>
                                         <div class="stock-image" style="background: #ddd; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">No Image</div>
                                     <?php endif; ?>

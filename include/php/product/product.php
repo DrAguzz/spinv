@@ -90,7 +90,7 @@ function addProduct($conn, $data, $file) {
     } catch (Exception $e) {
         // Jika ada error, buang gambar yang dah upload (if any)
         if (isset($imagePath) && !empty($imagePath)) {
-            $filePath = "../../include/uploads/product/" . $imagePath;
+            $filePath = "../../uploads/products/" . $imagePath;
             if (file_exists($filePath)) {
                 unlink($filePath);
             }
@@ -150,7 +150,7 @@ function uploadProductImage($file) {
     }
 
     // Create upload folder if not exists
-    $folder = "../../include/uploads/product/";
+    $folder = "../../uploads/products/";
     if (!file_exists($folder)) {
         if (!mkdir($folder, 0755, true)) {
             throw new Exception("Gagal cipta folder upload!");
@@ -293,7 +293,7 @@ function deleteProduct($conn, $id) {
 
         // Optional: Delete physical image file
         if (!empty($product['image'])) {
-            $imagePath = "../../include/uploads/product/" . $product['image'];
+            $imagePath = "../../uploads/products/" . $product['image'];
             if (file_exists($imagePath)) {
                 unlink($imagePath);
             }
@@ -362,7 +362,7 @@ function updateProduct($conn, $data, $file, $id) {
         if (!empty($file['image']['name'])) {
             // Delete old image if exists
             if (!empty($existingProduct['image'])) {
-                $oldImagePath = "../../include/uploads/product/" . $existingProduct['image'];
+                $oldImagePath = "../../uploads/products/" . $existingProduct['image'];
                 if (file_exists($oldImagePath)) {
                     unlink($oldImagePath);
                 }

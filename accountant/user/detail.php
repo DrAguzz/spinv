@@ -37,7 +37,7 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
     <div class="user-management">
 
     <div>
-      <img class="profile-placeholder profile-box" style="max-width: 300px;"  id="previewImage imageBox" src="<?= $user['image'] ? $link.'upload/user/'.$user['image'] : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='%23f0f0f0'/><text x='50%' y='50%' font-size='60' fill='%23999' text-anchor='middle' dominant-baseline='middle'>+</text></svg>" ?>" alt="Preview">
+      <img class="profile-placeholder profile-box" style="max-width: 300px;"  id="previewImage imageBox" src="<?= $user['image'] ? $imgLink.'uploads/users/'.$user['image'] : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='%23f0f0f0'/><text x='50%' y='50%' font-size='60' fill='%23999' text-anchor='middle' dominant-baseline='middle'>+</text></svg>" ?>" alt="Preview">
     </div>
     
     <div class="form">

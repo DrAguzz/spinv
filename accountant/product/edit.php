@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </thead>
                         <tbody>
                             <tr>
-                                <td><input class="input-product" type="text" name="productId" value="<?= htmlspecialchars($product['product_id']); ?>" required/></td>
+                                <td><input class="input-product" type="text" name="productId" value="<?= htmlspecialchars($product['id']); ?>" required/></td>
                                 <td><input class="input-product" type="text" name="description" value="<?= htmlspecialchars($product['description']); ?>" required/></td>
                                 <td>
                                     <select class="input-product" name="finish" required>
@@ -106,14 +106,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php endwhile; ?>
                                     </select>
                                 </td>
-                                <td><input class="input-product" type="text" name="slabLength" value="<?= htmlspecialchars($product['slab_length']); ?>" required/></td>
-                                <td><input class="input-product" type="text" name="slabWidth" value="<?= htmlspecialchars($product['slab_width']); ?>" required/></td>
+                                <td><input class="input-product" type="text" name="slabLength" value="<?= htmlspecialchars($product['length']); ?>" required/></td>
+                                <td><input class="input-product" type="text" name="slabWidth" value="<?= htmlspecialchars($product['width']); ?>" required/></td>
                             </tr>
                         </tbody>
                     </table>
 
                     <table style="margin-top: 10px;">
-                        <tr class="section-header">
+                        <tr>
                             <th colspan="4">Existing Stock</th>
                         </tr>
                         <tr>

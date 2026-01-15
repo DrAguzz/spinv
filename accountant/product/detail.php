@@ -68,7 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="card-buttons" style="width: 100%; margin-top: 20px;">
                         <button type="button" class="btn btn-secondary" onclick="history.back()" style="width: 50%; padding: 10px;">Close</button>
-                        <button onclick="window.location.href='./edit.php?id=<?= htmlspecialchars($product['id']) ?>'" class="btn btn-main" style="width: 50%; padding: 10px;">Edit</button>
+                        <!-- <button onclick="window.location.href='edit.php?id=<?= $productId ?>'"
+                            class="btn btn-main" style="width:50%; padding:10px;">
+                            Edit
+                        </button> -->
+                        <a href="edit.php?id=<?= $productId ?>" class="btn btn-main" style="width:50%; padding:10px; text-align: center; text-decoration: none;">
+                            Edit
+                        </a>
+
                     </div>
                 </div>
 

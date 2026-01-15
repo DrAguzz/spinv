@@ -55,7 +55,7 @@ function addUser($conn, $data, $file){
             throw new Exception("Fail melebihi 2MB.");
         }
 
-        $folder = "../../include/uploads/user/";
+        $folder = "../../uploads/users/";
         if (!file_exists($folder)) mkdir($folder, 0777, true);
 
         $imageName = time() . "_" . basename($file['image']['name']);
@@ -147,12 +147,12 @@ function updateUser($conn, $id, $data, $file){
     if(!empty($file['image']['name'])){
 
         $old = getUserById($conn, $id);
-        if (!empty($old['image']) && file_exists("../include/uploads/user/" . $old['image'])) {
-            unlink("../../include/uploads/user/" . $old['image']);
+        if (!empty($old['image']) && file_exists("../../uploads/users/" . $old['image'])) {
+            unlink("../../uploads/users/" . $old['image']);
         }
 
         $imageName = time() . "_" . basename($file['image']['name']);
-        $uploadPath = "../../include/uploads/user/" . $imageName;
+        $uploadPath = "../../uploads/users/" . $imageName;
 
         move_uploaded_file($file['image']['tmp_name'], $uploadPath);
 

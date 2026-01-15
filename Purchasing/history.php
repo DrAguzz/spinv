@@ -262,7 +262,7 @@ $stats = $stmt_stats->get_result()->fetch_assoc();
   <div class="section-container" style="margin-top: 24px;">
     <h3 class="section-title-clean" style="margin-bottom: 16px;">Quick Actions</h3>
     <div class="quick-grid">
-      <a href="index.php" class="quick-card">
+      <a href="index.php" class="quick-card" style="margin-top: 16px; text-decoration: none;">
         <div class="quick-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"></line>

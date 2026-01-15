@@ -21,9 +21,9 @@ mysqli_set_charset($conn, "utf8mb4");
 // Email configuration untuk forgot password
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
-define('SMTP_USER', 'your-email@gmail.com'); // Ganti dengan email anda
-define('SMTP_PASS', 'your-app-password'); // Ganti dengan App Password Gmail
-define('SMTP_FROM', 'your-email@gmail.com');
+define('SMTP_USER', 'erfanbagus06@gmail.com'); // Ganti dengan email anda
+define('SMTP_PASS', 'echf gega xlga dryo'); // Ganti dengan App Password Gmail
+define('SMTP_FROM', 'erfanbagus06@gmail.com');
 define('SMTP_FROM_NAME', 'SPInventory System');
 
 // Site URL

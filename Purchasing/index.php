@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_purchase'])) {
         
         if (in_array($ext, $allowed)) {
             $image_name = uniqid() . '.' . $ext;
-            $upload_path = $link . "upload/product/" . $image_name;
+            $upload_path = "../../uploads/products/" . $image_name;
             move_uploaded_file($_FILES['image']['tmp_name'], $upload_path);
         }
     }

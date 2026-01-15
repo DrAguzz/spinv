@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forgot Password - SPInventory</title>
+    <link rel="stylesheet" href="./include/css/accountant.css">
     <style>
         * {
             margin: 0;

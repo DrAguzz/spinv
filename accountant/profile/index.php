@@ -10,7 +10,7 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
     header("Location: ../../login.php"); // pastikan path betul
     exit();
 }
-$img = "../../";
+$imgLink = "../../";
 $nav = "../";
 $link = "../../include/";
 include($link."container/head.php");

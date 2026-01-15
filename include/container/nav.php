@@ -12,7 +12,7 @@ $user_image = isset($_SESSION['user_image']) && !empty($_SESSION['user_image'])
         <!-- Profile Section -->
         <div class="profile" style="margin-bottom:30px;">
             <div class="profile-img" style="width:50px;height:50px;border-radius:50%;overflow:hidden;margin-bottom:10px;">
-                <img src="<?php echo $link.'../uploads/users/'.$user_image; ?>" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
+                <img src="<?php echo $imgLink.'uploads/users/'.$user_image; ?>" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
             </div>
             <div class="profile-info">
                 <div class="profile-name" style="font-weight:600;"><p>welcome! <br> <?= $_SESSION['username'] ?></p></div>

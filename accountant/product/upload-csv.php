@@ -1,6 +1,7 @@
 <?php 
   $nav = "../";
   $link = "../../include/";
+  $imgLink = "../../";
   session_start();
 
 

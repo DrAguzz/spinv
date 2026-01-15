@@ -13,6 +13,7 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
 
 $nav = "../";
 $link = "../../include/";
+$imgLink = "../../";
 include($link."container/head.php");
 include($link."container/nav.php");
 
@@ -60,14 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div>
                     <div class="image-section" id="imageBox">
                         <img id="previewImage" src="../../uploads/products/<?= $product['image'] ?>" alt="Preview">
+                        <input type="file" name="image" id="imageInput" accept="image/*" style="display:none;">
+                        <input type="hidden" name="currentImage" value="<?= htmlspecialchars($product['image']) ?>">
                     </div>
 
-                    <input type="file" name="image" id="imageInput" accept="image/*" style="display:none;">
-                    <input type="hidden" name="currentImage" value="<?= htmlspecialchars($product['image']) ?>">
 
                     <div class="card-buttons" style="width: 100%; margin-top: 20px;">
                         <button type="button" class="btn btn-secondary" onclick="history.back()" style="width: 50%; padding: 10px;">Close</button>
-                        <button onclick="window.location.href='./edit.php?id=<?= $_GET['id'] ?>'" class="btn btn-main" style="width: 50%; padding: 10px;">Edit</button>
+                        <button onclick="window.location.href='./edit.php?id=<?= htmlspecialchars($product['id']) ?>'" class="btn btn-main" style="width: 50%; padding: 10px;">Edit</button>
                     </div>
                 </div>
 

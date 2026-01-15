@@ -13,6 +13,7 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
 
 $nav = "../";
   $link = "../../include/";
+  $imgLink = "../../";
   require($link . "php/config.php");
 
 // Security: Check if user is logged in (optional - uncomment bila dah ada auth)

@@ -12,6 +12,7 @@ if (strtolower($_SESSION['role_name']) !== 'accountant') {
 }
   $nav = "../";
   $link = "../../include/";
+  $imgLink = "../../";
   include($link."container/head.php");
   include($link."container/nav.php");
   require($link . "php/config.php");

@@ -17,6 +17,7 @@ require_once($link . "php/dashboard/dashboard.php");
 
 // LOAD HTML
 $nav = "./";
+$imgLink = "../";
 include($link . "container/head.php");
 include($link . "container/nav.php");
 

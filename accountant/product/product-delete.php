@@ -7,7 +7,7 @@
 session_start();
 $nav = "../";
 $link = "../../include/";
-
+$imgLink = "../../";
 require($link . "php/config.php");
 require_once($link . "php/product/product.php");
 

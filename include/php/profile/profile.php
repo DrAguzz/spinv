@@ -21,7 +21,7 @@ function getAccountant($conn) {
     ";
 
     $result = $conn->query($sql);
-    return $result->fetch_assoc();
+    return $result ? $result->fetch_assoc() : null;
 }
 
 // =======================================
@@ -47,7 +47,10 @@ function getAccountantById($conn, $id) {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
     $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
+    $result = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    
+    return $result ? $result : null;
 }
 
 // =======================================
@@ -59,46 +62,71 @@ function updateAccountant($conn, $id, $name, $email, $password, $imageName) {
     $old = getAccountantById($conn, $id);
     if (!$old) return false;
 
-    // ---------------------------
-    // HANDLE PASSWORD (ROLE)
-    // ---------------------------
-    if (!empty(trim($password))) {
+    // Mulakan transaction untuk data consistency
+    $conn->begin_transaction();
 
-        // Hash password BARU (sekali sahaja)
-        $hash = password_hash($password, PASSWORD_DEFAULT);
+    try {
+        // ---------------------------
+        // HANDLE PASSWORD (ROLE)
+        // ---------------------------
+        if (!empty(trim($password))) {
+            // Hash password BARU (sekali sahaja)
+            $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $sqlRole = "
-            UPDATE role 
-            SET password = ?
-            WHERE role_id = ?
+            $sqlRole = "UPDATE role SET password = ? WHERE role_id = ?";
+            $stmtRole = $conn->prepare($sqlRole);
+            $stmtRole->bind_param("si", $hash, $old['role_id']);
+            
+            if (!$stmtRole->execute()) {
+                throw new Exception("Failed to update password");
+            }
+            $stmtRole->close();
+        }
+
+        // ---------------------------
+        // HANDLE IMAGE
+        // ---------------------------
+        $finalImage = !empty($imageName) ? $imageName : $old['image'];
+
+        // ---------------------------
+        // UPDATE USER PROFILE
+        // ---------------------------
+        $sqlUser = "
+            UPDATE user 
+            SET 
+                username = ?,
+                email = ?,
+                image = ?
+            WHERE user_id = ?
         ";
-        $stmtRole = $conn->prepare($sqlRole);
-        $stmtRole->bind_param("si", $hash, $old['role_id']);
-        $stmtRole->execute();
+
+        $stmtUser = $conn->prepare($sqlUser);
+        $stmtUser->bind_param("sssi", $name, $email, $finalImage, $id);
+        
+        if (!$stmtUser->execute()) {
+            throw new Exception("Failed to update user profile");
+        }
+        $stmtUser->close();
+
+        // Commit transaction jika semua berjaya
+        $conn->commit();
+        return true;
+
+    } catch (Exception $e) {
+        // Rollback jika ada error
+        $conn->rollback();
+        error_log("Update Accountant Error: " . $e->getMessage());
+        return false;
     }
-    // jika password kosong → tak buat apa-apa (kekalkan hash lama)
+}
 
-    // ---------------------------
-    // HANDLE IMAGE
-    // ---------------------------
-    $finalImage = !empty($imageName) ? $imageName : $old['image'];
-
-    // ---------------------------
-    // UPDATE USER PROFILE
-    // ---------------------------
-    $sqlUser = "
-        UPDATE user 
-        SET 
-            username = ?,
-            email = ?,
-            image = ?
-        WHERE user_id = ?
-    ";
-
-    $stmtUser = $conn->prepare($sqlUser);
-    $stmtUser->bind_param("sssi", $name, $email, $finalImage, $id);
-
-    return $stmtUser->execute();
+// =======================================
+// DELETE OLD IMAGE (optional - helper function)
+// =======================================
+function deleteOldImage($imagePath) {
+    if (!empty($imagePath) && file_exists($imagePath)) {
+        unlink($imagePath);
+    }
 }
 
 ?>

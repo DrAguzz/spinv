@@ -58,7 +58,7 @@ $areaPerPiece = $product['length'] * $product['width'];
                 <div style="flex: 0 0 280px;">
                     <div class="image-section">
                         <?php if (!empty($product['image'])): ?>
-                            <img src="<?= $link ?>uploads/product/<?= htmlspecialchars($product['image']) ?>" 
+                            <img src="<?= $imgLink ?>uploads/products/<?= htmlspecialchars($product['image']) ?>" 
                                  alt="Product Image" 
                                  style="width: 100%; max-width: 280px; height: 280px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                         <?php else: ?>
